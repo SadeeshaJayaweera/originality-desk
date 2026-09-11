@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.TextFlow?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.writingassistant.ui.MainController"
+      prefHeight="800.0" prefWidth="1200.0">
+
+    <!-- Top Application Toolbar -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <padding>
+            <Insets top="8" right="16" bottom="8" left="16"/>
+        </padding>
+
+        <Label text="✍️ Writing Assistant" styleClass="h4"/>
+        <Separator orientation="VERTICAL"/>
+
+        <Button text="📄 New" onAction="#handleNewDocument" styleClass="btn, btn-default, btn-sm"/>
+        <Button text="📂 Open .docx" onAction="#handleOpenDocx" styleClass="btn, btn-default, btn-sm"/>
+        <Button text="💾 Export .docx" onAction="#handleExportDocx" styleClass="btn, btn-primary, btn-sm"/>
+        <MenuButton fx:id="recentDocsMenuBtn" text="🕒 Recent Docs" styleClass="btn, btn-default, btn-sm"/>
+
+        <Separator orientation="VERTICAL"/>
+
+        <Label text="Style:"/>
+        <ComboBox fx:id="globalStyleCombo" prefWidth="110"/>
+
+        <Separator orientation="VERTICAL"/>
+        <Label fx:id="currentDocLabel" text="Untitled Document" styleClass="text-info"/>
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <Label fx:id="aiStatusIndicator" text="● AI Engine: Checking..."/>
+        <Button text="⚙️ Settings" onAction="#handleOpenSettings" styleClass="btn, btn-default, btn-sm"/>
+    </HBox>
+
+    <!-- Main Workspace (Split: Editor on Left, Workflows on Right) -->
+    <SplitPane dividerPositions="0.60" VBox.vgrow="ALWAYS">
+        <!-- Left: Document Editor Area -->
+        <VBox spacing="8">
+            <padding>
+                <Insets top="12" right="12" bottom="12" left="16"/>
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Label text="Document Workspace" styleClass="h4"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="Draft your paper, select text to rewrite, or insert cited paraphrases." styleClass="text-muted"/>
+            </HBox>
+            <TextArea fx:id="documentEditor" VBox.vgrow="ALWAYS" wrapText="true"
+                      promptText="Type or paste your document here... Select any sentence to rewrite or check similarity."/>
+        </VBox>
+
+        <!-- Right: Tabbed Assistant Tools (Phases 1-3) -->
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+            <!-- Tab 1: Style Rewriting (Phase 1) -->
+            <Tab text="✍️ Rewrite">
+                <VBox spacing="12">
+                    <padding>
+                        <Insets top="14" right="14" bottom="14" left="14"/>
+                    </padding>
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <VBox spacing="2">
+                            <Label text="Rewrite Selection" styleClass="h4"/>
+                            <Label text="Refine your own writing with AI alternative phrasings." styleClass="text-muted"/>
+                        </VBox>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="Phase 1 • No Citation" styleClass="lbl, lbl-primary"/>
+                    </HBox>
+
+                    <!-- Rewrite Mode Selector -->
+                    <VBox spacing="6" styleClass="panel, panel-default, panel-body">
+                        <Label text="Choose Rewrite Mode:" styleClass="h5"/>
+                        <GridPane hgap="10" vgap="6">
+                            <fx:define>
+                                <ToggleGroup fx:id="rewriteModeGroup"/>
+                            </fx:define>
+                            <RadioButton fx:id="radioTighten" text="Tighten (Cut filler)" toggleGroup="$rewriteModeGroup" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                            <RadioButton fx:id="radioClarity" text="Clarity (ESL/Flow)" toggleGroup="$rewriteModeGroup" GridPane.columnIndex="1" GridPane.rowIndex="0" selected="true"/>
+                            <RadioButton fx:id="radioFormal" text="Formal (Academic tone)" toggleGroup="$rewriteModeGroup" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                            <RadioButton fx:id="radioCasual" text="Casual (Conversational)" toggleGroup="$rewriteModeGroup" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                            <RadioButton fx:id="radioGrammar" text="Grammar Fix (Syntax only)" toggleGroup="$rewriteModeGroup" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        </GridPane>
+                    </VBox>
+
+                    <Button fx:id="executeRewriteBtn" text="⚡ Generate Rewrite Alternatives"
+                            onAction="#handleExecuteRewrite" maxWidth="Infinity" styleClass="btn, btn-primary"/>
+                    <Label fx:id="rewriteStatusLabel" text="Select text in the editor and click Generate." styleClass="text-muted"/>
+
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+                        <VBox fx:id="rewriteAlternativesContainer" spacing="8">
+                            <!-- Populated dynamically with alternative cards -->
+                        </VBox>
+                    </ScrollPane>
+                </VBox>
+            </Tab>
+
+            <!-- Tab 2: Quote Paraphrasing (Phase 2) -->
+            <Tab text="📚 Paraphrase Quote">
+                <VBox spacing="14" alignment="TOP_CENTER">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+                    <HBox alignment="CENTER_LEFT" spacing="8" maxWidth="Infinity">
+                        <VBox spacing="2">
+                            <Label text="Citation-Safe Paraphraser" styleClass="h4"/>
+                            <Label text="Paraphrase external quotes with mandatory attribution." styleClass="text-muted"/>
+                        </VBox>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="Phase 2 • Mandatory Citation" styleClass="lbl, lbl-success"/>
+                    </HBox>
+
+                    <VBox spacing="12" styleClass="alert, alert-success" maxWidth="Infinity">
+                        <Label text="⚠️ Academic Attribution Reminder" styleClass="h5"/>
+                        <Label text="Paraphrasing an external source requires both structural restructuring (to avoid patchwriting) and exact citation attribution."
+                               wrapText="true"/>
+                        <Label text="Click below to open the citation wizard: enter a quote, attach or select bibliographic metadata, generate a restyled paraphrase, and insert it with an in-text citation."
+                               wrapText="true"/>
+                    </VBox>
+
+                    <Button text="📚 Open Paraphrase &amp; Citation Dialog" onAction="#handleOpenParaphraseDialog"
+                            maxWidth="Infinity" styleClass="btn, btn-success" prefHeight="44"/>
+                </VBox>
+            </Tab>
+
+            <!-- Tab 3: Similarity Checker (Phase 3) -->
+            <Tab text="🔍 Similarity Safeguard">
+                <ScrollPane fitToWidth="true">
+                    <VBox spacing="12">
+                        <padding>
+                            <Insets top="14" right="14" bottom="14" left="14"/>
+                        </padding>
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <VBox spacing="2">
+                                <Label text="Local Similarity Checker" styleClass="h4"/>
+                                <Label text="Detects close paraphrasing, patchwriting, and n-gram overlap." styleClass="text-muted"/>
+                            </VBox>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="Phase 3 • 100% Offline" styleClass="lbl, lbl-info"/>
+                        </HBox>
+
+                        <VBox spacing="4">
+                            <Label text="1. Original Source Passage:" styleClass="h5"/>
+                            <TextArea fx:id="simSourceArea" prefRowCount="3" wrapText="true"
+                                      promptText="Paste the original source text here..."/>
+                        </VBox>
+
+                        <VBox spacing="4">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="2. Candidate Paraphrase:" styleClass="h5"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="Use Selection from Editor" onAction="#handleUseSelectionForParaphrase" styleClass="btn, btn-default, btn-xs"/>
+                            </HBox>
+                            <TextArea fx:id="simParaphraseArea" prefRowCount="3" wrapText="true"
+                                      promptText="Paste your rewritten paraphrase here..."/>
+                        </VBox>
+
+                        <Button fx:id="checkSimilarityBtn" text="🔍 Run Offline Similarity Check"
+                                onAction="#handleRunSimilarityCheck" maxWidth="Infinity" styleClass="btn, btn-info"/>
+
+                        <!-- Similarity Report Result Card -->
+                        <VBox fx:id="simReportCard" spacing="10" visible="false" managed="false" styleClass="panel, panel-default, panel-body">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <VBox spacing="2">
+                                    <Label text="Similarity Score" styleClass="text-muted"/>
+                                    <Label fx:id="simScoreLabel" text="0.0%" styleClass="h4"/>
+                                </VBox>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="simRiskBadge" text="LOW RISK" styleClass="lbl, lbl-success"/>
+                            </HBox>
+
+                            <GridPane hgap="12" vgap="4">
+                                <Label fx:id="simNgramLabel" text="N-Gram Overlap: 0.0%" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                                <Label fx:id="simLcsLabel" text="Word LCS Ratio: 0.0%" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                                <Label fx:id="simEditLabel" text="Edit Distance: 0.0%" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                            </GridPane>
+
+                            <Label fx:id="simGuidanceLabel" wrapText="true"/>
+
+                            <VBox spacing="4">
+                                <Label text="Flagged Span Highlighting:" styleClass="h5"/>
+                                <TextFlow fx:id="simHighlightedPreview"/>
+                            </VBox>
+                        </VBox>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+            <!-- Tab 4: Bibliography Manager -->
+            <Tab text="📖 Bibliography">
+                <VBox spacing="10">
+                    <padding>
+                        <Insets top="14" right="14" bottom="14" left="14"/>
+                    </padding>
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <VBox spacing="2">
+                            <Label text="Saved Document Citations" styleClass="h4"/>
+                            <Label text="Citations stored in local SQLite database." styleClass="text-muted"/>
+                        </VBox>
+                    </HBox>
+
+                    <ListView fx:id="bibSourcesListView" prefHeight="160"/>
+
+                    <HBox spacing="8">
+                        <Button text="🗑️ Delete Selected Source" onAction="#handleDeleteSelectedSource" styleClass="btn, btn-danger, btn-sm"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                    </HBox>
+
+                    <VBox spacing="4" VBox.vgrow="ALWAYS">
+                        <Label text="Formatted Reference List Preview:" styleClass="h5"/>
+                        <TextArea fx:id="bibFormattedPreview" VBox.vgrow="ALWAYS" wrapText="true" editable="false"/>
+                    </VBox>
+
+                    <Button fx:id="appendBibToDocBtn" text="➕ Append Bibliography to Document"
+                            onAction="#handleAppendBibliographyToDoc" maxWidth="Infinity" styleClass="btn, btn-primary"/>
+                </VBox>
+            </Tab>
+        </TabPane>
+    </SplitPane>
+
+    <!-- Bottom Status Bar -->
+    <HBox spacing="16" alignment="CENTER_LEFT">
+        <padding>
+            <Insets top="4" right="16" bottom="4" left="16"/>
+        </padding>
+        <Label fx:id="wordCountLabel" text="0 words"/>
+        <Separator orientation="VERTICAL"/>
+        <Label fx:id="charCountLabel" text="0 chars"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="Writing Assistant v1.0.0 • BootstrapFX &amp; SQLite Enabled" styleClass="text-muted"/>
+    </HBox>
+</VBox>
