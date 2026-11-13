@@ -17,7 +17,7 @@ This document tracks the live implementation status of the 40 individual Pull Re
 
 | Total PRs | Completed / Ready | In Progress | Blocked | Not Started |
 |---|---|---|---|---|
-| **40** | **1** | **0** | **0** | **39** |
+| **40** | **2** | **0** | **0** | **38** |
 
 ---
 
@@ -26,7 +26,7 @@ This document tracks the live implementation status of the 40 individual Pull Re
 | PR | Title | Branch | Status | Tests Executed | Outcome | Main Files Changed | PR URL / Notes |
 |:---:|:---|:---|:---:|:---|:---:|:---|:---|
 | **01** | Baseline Audit and Engineering Documentation | `feature/pr-01-baseline-audit` | `READY_FOR_REVIEW` | `mvn test` (154 tests), `fixtures.test.cjs`, `markup.test.cjs`, `frontend.test.cjs`, `run.py` | 100% Pass (0 Failures, 3 Skipped) | `docs/ARCHITECTURE.md`, `docs/ENGINEERING_AUDIT.md`, `docs/IMPLEMENTATION_ROADMAP.md`, `docs/PR_PROGRESS.md` | Establishes verified repository baseline & tracking matrix |
-| **02** | Maven Dependency and Build Reliability | `feature/pr-02-maven-build-reliability` | `NOT_STARTED` | Pending | Pending | `pom.xml`, build configs | Target: eliminate compiler warnings, pin versions |
+| **02** | Maven Dependency and Build Reliability | `feature/pr-02-maven-build-reliability` | `READY_FOR_REVIEW` | `mvn --offline test-compile`, `mvn test` | 100% Pass | `pom.xml`, `docs/BUILD_REQUIREMENTS.md`, `docs/PR_PROGRESS.md` | Centralized properties, reproducible timestamps, license matrix |
 | **03** | Backend Package and Service Architecture | `feature/pr-03-backend-architecture` | `NOT_STARTED` | Pending | Pending | Backend service packages | Target: decouple service layers |
 | **04** | Configuration and Secrets Management | `feature/pr-04-configuration-secrets-management` | `NOT_STARTED` | Pending | Pending | `ServerConfig.java`, `.env.example` | Target: centralized fail-fast config |
 | **05** | Authentication and Session Security Review | `feature/pr-05-auth-session-security` | `NOT_STARTED` | Pending | Pending | `Security.java`, auth endpoints | Target: PBKDF2 hardening & cookie security |
