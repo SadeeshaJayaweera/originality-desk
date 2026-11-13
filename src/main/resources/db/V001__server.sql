@@ -14,3 +14,5 @@ CREATE TABLE reviews (id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, analysis_
 CREATE INDEX reviews_analysis ON reviews(workspace_id,analysis_id,created_at);
 CREATE TABLE audit_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace_id TEXT NOT NULL REFERENCES workspaces(id), user_id TEXT NOT NULL, action TEXT NOT NULL, resource_id TEXT, created_at TEXT NOT NULL);
 CREATE INDEX audit_workspace ON audit_logs(workspace_id,id);
+CREATE TABLE external_references (workspace_id TEXT NOT NULL REFERENCES workspaces(id), document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE, provider_id TEXT NOT NULL, external_id TEXT NOT NULL, doi TEXT, title TEXT NOT NULL, authors_json TEXT, publication_year INTEGER, venue_or_publisher TEXT, landing_page_url TEXT, pdf_url TEXT, license TEXT, is_open_access INTEGER NOT NULL DEFAULT 0, citation_count INTEGER NOT NULL DEFAULT 0, citation_apa TEXT, citation_ieee TEXT, citation_mla TEXT, citation_bibtex TEXT, resolver_url TEXT, created_at TEXT NOT NULL, PRIMARY KEY (workspace_id, document_id));
+CREATE INDEX ext_ref_doi ON external_references(workspace_id, doi);

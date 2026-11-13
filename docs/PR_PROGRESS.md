@@ -17,7 +17,7 @@ This document tracks the live implementation status of the 40 individual Pull Re
 
 | Total PRs | Completed / Ready | In Progress | Blocked | Not Started |
 |---|---|---|---|---|
-| **40** | **8** | **0** | **0** | **32** |
+| **40** | **20** | **0** | **0** | **20** |
 
 ---
 
@@ -44,7 +44,7 @@ This document tracks the live implementation status of the 40 individual Pull Re
 | **17** | Semantic Scholar Integration | `feature/pr-17-semantic-scholar-integration` | `READY_FOR_REVIEW` | `mvn test -Dtest=SemanticScholarSourceProviderTest` | 100% Pass (3/3 tests) | `SemanticScholarSourceProvider.java`, `SemanticScholarSourceProviderTest.java` | Semantic Scholar Academic Graph client, optional API key forwarding, DOI resolution, citation count and OA PDF discovery |
 | **18** | CORE Integration and Full-Text Availability | `feature/pr-18-core-integration-fulltext` | `READY_FOR_REVIEW` | `mvn test -Dtest=CoreSourceProviderTest` | 100% Pass (4/4 tests) | `CoreSourceProvider.java`, `CoreSourceProviderTest.java` | CORE API v3 client, Bearer token authentication, full-text download URL detection, DOI fallback search, 401/429 status translation |
 | **19** | Unified External Reference Search | `feature/pr-19-unified-external-reference-search` | `READY_FOR_REVIEW` | `mvn test -Dtest=UnifiedExternalReferenceSearchTest` | 100% Pass (4/4 tests) | `UnifiedExternalReferenceSearch.java`, `UnifiedSearchResult.java`, `UnifiedExternalReferenceSearchTest.java` | Parallel federated scholarly search coordinator, DOI & title deduplication, metadata merging, full-text priority ranking, fault-tolerant aggregation |
-| **20** | External Reference Evidence and Source Attribution | `feature/pr-20-external-reference-attribution` | `NOT_STARTED` | Pending | Pending | Attribution models & views | Target: persistent DOI & publisher links |
+| **20** | External Reference Evidence and Source Attribution | `feature/pr-20-external-reference-attribution` | `READY_FOR_REVIEW` | `mvn test -Dtest=ExternalReferenceEvidenceTest,ScholarlyCitationFormatterTest` | 100% Pass (11/11 tests) | `ExternalReferenceEvidence.java`, `ScholarlyCitationFormatter.java`, `DocumentOperations.java`, `Service.java`, `OriginalityDeskServer.java`, `Reports.java`, `V001__server.sql`, `ExternalReferenceEvidenceTest.java`, `ScholarlyCitationFormatterTest.java` | External source attribution persistence, APA/IEEE/MLA/BibTeX citation generator, DOI publisher links, workspace reference import, tenant isolation |
 | **21** | Similarity Engine Architecture | `feature/pr-21-similarity-engine-architecture` | `NOT_STARTED` | Pending | Pending | `SimilarityStrategy.java` | Target: decouple exact/near/semantic engines |
 | **22** | Embedding Model Evaluation and Selection | `feature/pr-22-embedding-model-selection` | `NOT_STARTED` | Pending | Pending | Evaluation benchmarks & docs | Target: Sentence Transformers selection |
 | **23** | ONNX Model Runtime Integration | `feature/pr-23-onnx-runtime-integration` | `NOT_STARTED` | Pending | Pending | ONNX Runtime Java, tokenizers | Target: deterministic local embeddings |

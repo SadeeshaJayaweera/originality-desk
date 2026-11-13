@@ -3,6 +3,14 @@ package com.writingassistant.server;
 import com.google.gson.*;
 import com.writingassistant.analysis.DocumentExtractor;
 import com.writingassistant.analysis.EvidenceEngine;
+import com.writingassistant.sources.DoiNormalizer;
+import com.writingassistant.sources.ExternalReferenceEvidence;
+import com.writingassistant.sources.ExternalScholarlyWork;
+import com.writingassistant.sources.ExternalSearchQuery;
+import com.writingassistant.sources.ScholarlyCitationFormatter;
+import com.writingassistant.sources.SourceAttribution;
+import com.writingassistant.sources.UnifiedExternalReferenceSearch;
+import com.writingassistant.sources.UnifiedSearchResult;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -25,6 +33,7 @@ public final class Service implements AuthOperations, DocumentOperations, Analys
     private static final String ANALYSIS_COLUMNS = "id,document_id AS documentId,title,status,profile,created_at AS createdAt,completed_at AS completedAt,error,source_count AS sourceCount";
     private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     final ServerDatabase db;
+    final UnifiedExternalReferenceSearch externalSearch;
 
     public record Actor(String userId, String workspaceId, String role) {
         public void admin() {
@@ -36,7 +45,13 @@ public final class Service implements AuthOperations, DocumentOperations, Analys
         }
     }
     public record Authentication(String token, Map<String,Object> body) {}
-    public Service(ServerDatabase db) { this.db = db; }
+    public Service(ServerDatabase db) {
+        this(db, new UnifiedExternalReferenceSearch());
+    }
+    public Service(ServerDatabase db, UnifiedExternalReferenceSearch externalSearch) {
+        this.db = db;
+        this.externalSearch = externalSearch != null ? externalSearch : new UnifiedExternalReferenceSearch();
+    }
     static String now() { return Instant.now().toString(); }
     static String id() { return UUID.randomUUID().toString(); }
     static String string(JsonObject input, String field, int max) {
@@ -235,10 +250,178 @@ public final class Service implements AuthOperations, DocumentOperations, Analys
             sql.execute("DELETE FROM analyses WHERE workspace_id=? AND id=?", actor.workspaceId(), row.get("id"));
         }
         sql.execute("DELETE FROM jobs WHERE workspace_id=? AND kind='EXTRACT' AND resource_id=?", actor.workspaceId(), documentId);
+        sql.execute("DELETE FROM external_references WHERE workspace_id=? AND document_id=?", actor.workspaceId(), documentId);
         Files.deleteIfExists(blob((String) doc.get("storage_name")));
         sql.execute("DELETE FROM documents WHERE workspace_id=? AND id=?", actor.workspaceId(), documentId);
         audit(sql, actor, action, documentId);
         return true;
+    }
+
+    public Map<String, Object> searchExternalReferences(String query, int limit) throws Exception {
+        if (query == null || query.isBlank() || query.length() > 500)
+            throw ApiException.bad("Query must be between 1 and 500 characters");
+        int boundedLimit = Math.max(1, Math.min(limit, 50));
+        UnifiedSearchResult result = externalSearch.search(ExternalSearchQuery.of(query, boundedLimit));
+        List<Map<String, Object>> works = new ArrayList<>();
+        for (ExternalScholarlyWork work : result.works()) {
+            works.add(formatWorkWithEvidence(work));
+        }
+        return Map.of(
+                "query", query,
+                "totalResults", result.totalEstimatedResults(),
+                "works", works,
+                "resultsPerProvider", result.resultsPerProvider(),
+                "failedProviders", result.failedProviders()
+        );
+    }
+
+    public Map<String, Object> resolveExternalReferenceByDoi(String doi) throws Exception {
+        Optional<String> normalizedDoi = DoiNormalizer.normalize(doi);
+        if (normalizedDoi.isEmpty()) throw ApiException.bad("Invalid DOI format");
+        Optional<ExternalScholarlyWork> workOpt = externalSearch.resolveByDoi(normalizedDoi.get());
+        if (workOpt.isEmpty()) throw ApiException.missing();
+        return formatWorkWithEvidence(workOpt.get());
+    }
+
+    public Map<String, Object> importExternalReference(Actor actor, JsonObject input) throws Exception {
+        if (input == null) throw ApiException.bad("Missing payload");
+        JsonObject target = input.has("work") && input.get("work").isJsonObject() ? input.getAsJsonObject("work") : input;
+
+        String title = string(target, "title", 500).strip();
+        String providerId = target.has("providerId") && !target.get("providerId").isJsonNull()
+                ? target.get("providerId").getAsString() : "EXTERNAL";
+        String externalId = target.has("externalId") && !target.get("externalId").isJsonNull()
+                ? target.get("externalId").getAsString() : id();
+        String doi = target.has("doi") && !target.get("doi").isJsonNull()
+                ? target.get("doi").getAsString() : null;
+        String rawText = target.has("abstractText") && !target.get("abstractText").isJsonNull()
+                ? target.get("abstractText").getAsString().strip() : "";
+        if (rawText.isBlank()) {
+            rawText = title;
+        }
+        if (rawText.length() > MAX_SOURCE_TEXT) {
+            rawText = rawText.substring(0, MAX_SOURCE_TEXT);
+        }
+        final String text = rawText;
+
+        List<String> authors = new ArrayList<>();
+        if (target.has("authors") && target.get("authors").isJsonArray()) {
+            for (JsonElement a : target.getAsJsonArray("authors")) {
+                if (a.isJsonPrimitive() && a.getAsJsonPrimitive().isString()) authors.add(a.getAsString());
+            }
+        }
+        Integer year = target.has("publicationYear") && !target.get("publicationYear").isJsonNull()
+                ? target.get("publicationYear").getAsInt() : null;
+        String venue = target.has("venueOrJournal") && !target.get("venueOrJournal").isJsonNull()
+                ? target.get("venueOrJournal").getAsString() : null;
+        String landingPageUrl = target.has("landingPageUrl") && !target.get("landingPageUrl").isJsonNull()
+                ? target.get("landingPageUrl").getAsString() : null;
+        String pdfUrl = target.has("pdfUrl") && !target.get("pdfUrl").isJsonNull()
+                ? target.get("pdfUrl").getAsString() : null;
+        String license = target.has("license") && !target.get("license").isJsonNull()
+                ? target.get("license").getAsString() : null;
+        boolean isOpenAccess = target.has("isOpenAccess") && !target.get("isOpenAccess").isJsonNull()
+                && target.get("isOpenAccess").getAsBoolean();
+        int citationCount = target.has("citationCount") && !target.get("citationCount").isJsonNull()
+                ? target.get("citationCount").getAsInt() : 0;
+
+        ExternalScholarlyWork work = ExternalScholarlyWork.builder()
+                .providerId(providerId)
+                .externalId(externalId)
+                .title(title)
+                .authors(authors)
+                .publicationYear(year)
+                .venueOrJournal(venue)
+                .doi(doi)
+                .landingPageUrl(landingPageUrl)
+                .pdfUrl(pdfUrl)
+                .abstractText(text)
+                .citationCount(citationCount)
+                .hasFullText(pdfUrl != null)
+                .attribution(SourceAttribution.of(providerId, venue, landingPageUrl, license, isOpenAccess))
+                .build();
+
+        String documentId = id();
+        ExternalReferenceEvidence evidence = ExternalReferenceEvidence.fromWork(actor.workspaceId(), documentId, work);
+
+        byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+        String hash = Security.hash(bytes);
+        String storageName = Security.token();
+        Path path = db.blobs.resolve(storageName);
+
+        try {
+            return db.transaction(sql -> {
+                String workspace = actor.workspaceId();
+                if (sql.one("SELECT id FROM documents WHERE workspace_id=? AND kind='REFERENCE' AND sha256=?", workspace, hash) != null)
+                    throw new ApiException(409, "DUPLICATE_DOCUMENT", "This reference already exists in this workspace");
+                if (sql.number("SELECT COUNT(*) FROM documents WHERE workspace_id=?", workspace) >= 2000
+                        || sql.number("SELECT COUNT(*) FROM documents") >= 10_000)
+                    throw ApiException.limit("Document limit reached");
+
+                Files.write(path, bytes, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+                ServerDatabase.privatePermissions(path, "rw-------");
+
+                int wordCount = text.split("\\s+").length;
+                sql.execute("INSERT INTO documents(id,workspace_id,title,filename,kind,status,bytes,created_at,storage_name,sha256,word_count,page_count,text) VALUES(?,?,?,?,?,'READY',?,?,?,?,?,1,?)",
+                        documentId, workspace, title, "external-" + documentId + ".txt", "REFERENCE", bytes.length, now(), storageName, hash, wordCount, text);
+
+                sql.execute("INSERT INTO external_references(workspace_id,document_id,provider_id,external_id,doi,title,authors_json,publication_year,venue_or_publisher,landing_page_url,pdf_url,license,is_open_access,citation_count,citation_apa,citation_ieee,citation_mla,citation_bibtex,resolver_url,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        workspace, documentId, evidence.providerId(), evidence.externalId(), evidence.doi(), evidence.title(),
+                        JSON.toJson(evidence.authors()), evidence.publicationYear(), evidence.venueOrPublisher(),
+                        evidence.landingPageUrl(), evidence.pdfUrl(), evidence.license(), evidence.isOpenAccess() ? 1 : 0,
+                        evidence.citationCount(), evidence.citationApa(), evidence.citationIeee(), evidence.citationMla(),
+                        evidence.citationBibtex(), evidence.persistentResolverUrl(), now());
+
+                audit(sql, actor, "EXTERNAL_REFERENCE_IMPORTED", documentId);
+                Map<String, Object> doc = document(sql, workspace, documentId);
+                Map<String, Object> result = new LinkedHashMap<>(doc);
+                result.put("evidence", evidence.toMap());
+                return result;
+            });
+        } catch (Exception e) {
+            try { Files.deleteIfExists(path); } catch (IOException cleanup) { e.addSuppressed(cleanup); }
+            throw e;
+        }
+    }
+
+    public Map<String, Object> getExternalReferenceEvidence(Actor actor, String documentId) throws Exception {
+        return db.transaction(sql -> {
+            Map<String, Object> row = sql.one("SELECT * FROM external_references WHERE workspace_id=? AND document_id=?",
+                    actor.workspaceId(), documentId);
+            if (row == null) throw ApiException.missing();
+            return row;
+        });
+    }
+
+    private Map<String, Object> formatWorkWithEvidence(ExternalScholarlyWork work) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("providerId", work.providerId());
+        map.put("externalId", work.externalId());
+        map.put("title", work.title());
+        map.put("authors", work.authors());
+        map.put("publicationYear", work.publicationYear());
+        map.put("venueOrJournal", work.venueOrJournal());
+        map.put("doi", work.doi());
+        map.put("landingPageUrl", work.landingPageUrl());
+        map.put("pdfUrl", work.pdfUrl());
+        map.put("abstractText", work.abstractText());
+        map.put("citationCount", work.citationCount());
+        map.put("hasFullText", work.hasFullText());
+        map.put("persistentResolverUrl", ScholarlyCitationFormatter.getPersistentResolver(work));
+        map.put("citationApa", ScholarlyCitationFormatter.formatApa(work));
+        map.put("citationIeee", ScholarlyCitationFormatter.formatIeee(work));
+        map.put("citationMla", ScholarlyCitationFormatter.formatMla(work));
+        map.put("citationBibtex", ScholarlyCitationFormatter.formatBibtex(work));
+        if (work.attribution() != null) {
+            map.put("attribution", Map.of(
+                    "providerId", work.attribution().providerId(),
+                    "sourceRepository", work.attribution().sourceRepository() != null ? work.attribution().sourceRepository() : "",
+                    "persistentUri", work.attribution().persistentUri() != null ? work.attribution().persistentUri() : "",
+                    "license", work.attribution().license() != null ? work.attribution().license() : "",
+                    "isOpenAccess", work.attribution().isOpenAccess()
+            ));
+        }
+        return map;
     }
 
     static final int RETENTION_BATCH = 100;

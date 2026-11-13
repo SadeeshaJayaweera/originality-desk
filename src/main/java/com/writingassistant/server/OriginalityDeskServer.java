@@ -134,6 +134,8 @@ public final class OriginalityDeskServer implements AutoCloseable {
                 requireMethod(method, "GET"); json(exchange, 200, service.dashboard(actor));
             } else if (path[0].equals("documents")) {
                 documents(exchange, method, path, query, actor);
+            } else if (path[0].equals("references") && path.length >= 2 && path[1].equals("external")) {
+                references(exchange, method, path, query, actor);
             } else if (path[0].equals("analyses")) {
                 analyses(exchange, method, path, query, actor);
             } else if (path[0].equals("reports")) {
@@ -172,6 +174,30 @@ public final class OriginalityDeskServer implements AutoCloseable {
             if (method.equals("GET")) json(x, 200, service.document(actor, path[1]));
             else if (method.equals("DELETE")) { service.deleteDocument(actor, path[1]); empty(x, 204); }
             else throw methodError();
+        } else throw ApiException.missing();
+    }
+    private void references(HttpExchange x, String method, String[] path, Map<String,String> query, Service.Actor actor) throws Exception {
+        if (path.length == 3 && path[2].equals("search")) {
+            requireMethod(method, "GET");
+            String q = query.get("q");
+            int limit = 10;
+            if (query.containsKey("limit")) {
+                try { limit = Integer.parseInt(query.get("limit")); } catch (NumberFormatException ignored) {}
+            }
+            json(x, 200, service.searchExternalReferences(q, limit));
+        } else if (path.length == 3 && path[2].equals("doi")) {
+            requireMethod(method, "GET");
+            String doi = query.get("doi");
+            json(x, 200, service.resolveExternalReferenceByDoi(doi));
+        } else if (path.length == 3 && path[2].equals("import")) {
+            requireMethod(method, "POST");
+            limiter.take("ref-import:" + actor.userId(), 30);
+            JsonObject input = body(x, false);
+            json(x, 201, service.importExternalReference(actor, input));
+        } else if (path.length == 3) {
+            requireMethod(method, "GET");
+            String documentId = path[2];
+            json(x, 200, service.getExternalReferenceEvidence(actor, documentId));
         } else throw ApiException.missing();
     }
     private void analyses(HttpExchange x, String method, String[] path, Map<String,String> query, Service.Actor actor) throws Exception {
