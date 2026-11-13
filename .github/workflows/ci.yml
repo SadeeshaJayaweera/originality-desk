@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build, Test & Security Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up OpenJDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify compilation and type checking
+        run: mvn test-compile -B
+
+      - name: Run Java unit and integration test suite
+        run: mvn test -B
+
+      - name: Run JavaScript frontend and harness unit tests
+        run: |
+          node scripts/e2e/fixtures.test.cjs
+          node scripts/e2e/markup.test.cjs
+          node src/main/resources/web/frontend.test.cjs
+
+      - name: Build production shaded JAR
+        run: mvn package -DskipTests -B
+
+      - name: Verify synthetic evaluation benchmark
+        run: python3 scripts/evaluation/run.py --verify-only scripts/evaluation/results
+
+      - name: Inspect built artifact
+        run: |
+          ls -lh target/writing-assistant-1.0.0-SNAPSHOT.jar
+          test -s target/writing-assistant-1.0.0-SNAPSHOT.jar
+

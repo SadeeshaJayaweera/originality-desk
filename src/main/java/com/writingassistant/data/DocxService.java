@@ -2,22 +2,38 @@ package com.writingassistant.data;
 
 import com.writingassistant.core.citation.CitationStyle;
 import org.apache.poi.xwpf.usermodel.*;
+import org.apache.poi.openxml4j.util.ZipSecureFile;
 
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipInputStream;
 
 /**
  * Service for importing and exporting Word (.docx) documents with rich formatting (italics, hanging indents)
  * powered by Apache POI.
  */
 public class DocxService {
+
+    public static final int MAX_FILE_BYTES = 10 * 1024 * 1024;
+    public static final int MAX_TEXT_CHARS = 1_000_000;
+    public static final long MAX_ZIP_EXPANDED_BYTES = 50L * 1024 * 1024;
+    public static final long MAX_ZIP_ENTRY_BYTES = 16L * 1024 * 1024;
+    public static final int MAX_ZIP_ENTRIES = 1_000;
+
+    static {
+        // POI settings are process-wide: never weaken a stricter existing policy.
+        ZipSecureFile.setMinInflateRatio(Math.max(ZipSecureFile.getMinInflateRatio(), 0.01));
+        ZipSecureFile.setMaxEntrySize(Math.min(ZipSecureFile.getMaxEntrySize(), MAX_ZIP_ENTRY_BYTES));
+        ZipSecureFile.setMaxTextSize(Math.min(ZipSecureFile.getMaxTextSize(), MAX_TEXT_CHARS));
+    }
 
     private static final Pattern ITALIC_PATTERN = Pattern.compile("\\*([^*]+)\\*|_([^_]+)_");
 
@@ -33,18 +49,31 @@ public class DocxService {
             throw new IOException("File not found: " + docxPath);
         }
 
+        if (Files.size(docxPath) > MAX_FILE_BYTES) {
+            throw new IOException("DOCX file exceeds the 10 MiB desktop import limit.");
+        }
+        byte[] bytes;
+        try (InputStream is = Files.newInputStream(docxPath)) {
+            bytes = is.readNBytes(MAX_FILE_BYTES + 1);
+        }
+        if (bytes.length > MAX_FILE_BYTES) {
+            throw new IOException("DOCX file exceeds the 10 MiB desktop import limit.");
+        }
+        validateZipExpansion(bytes);
         StringBuilder sb = new StringBuilder();
-        try (InputStream is = Files.newInputStream(docxPath);
-             XWPFDocument document = new XWPFDocument(is)) {
+        try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(bytes))) {
             for (XWPFParagraph paragraph : document.getParagraphs()) {
                 String text = paragraph.getText();
                 if (text != null && !text.isBlank()) {
+                    requireTextLimit((long) sb.length() + text.length() + (sb.length() > 0 ? 2 : 0));
                     if (sb.length() > 0) {
                         sb.append("\n\n");
                     }
                     sb.append(text.trim());
                 }
             }
+        } catch (RuntimeException e) {
+            throw new IOException("DOCX could not be read safely. Check file validity and desktop import limits.", e);
         }
         return sb.toString();
     }
@@ -60,6 +89,14 @@ public class DocxService {
      */
     public static void exportDocx(Path targetPath, String documentText, List<String> bibliographyEntries, CitationStyle style)
             throws IOException {
+        long textLength = documentText == null ? 0 : documentText.length();
+        requireTextLimit(textLength);
+        if (bibliographyEntries != null) {
+            for (String entry : bibliographyEntries) {
+                textLength += entry == null ? 0 : entry.length() + 2L;
+                requireTextLimit(textLength);
+            }
+        }
         try (XWPFDocument document = new XWPFDocument()) {
             // 1. Write Main Document Body Paragraphs
             if (documentText != null && !documentText.isBlank()) {
@@ -147,6 +184,38 @@ public class DocxService {
             endRun.setText(remainingText);
             endRun.setFontFamily("Times New Roman");
             endRun.setFontSize(12);
+        }
+    }
+
+    private static void requireTextLimit(long chars) throws IOException {
+        if (chars > MAX_TEXT_CHARS) {
+            throw new IOException("DOCX text exceeds the " + MAX_TEXT_CHARS + " character desktop limit.");
+        }
+    }
+
+    private static void validateZipExpansion(byte[] bytes) throws IOException {
+        // Count actual inflated bytes, not untrusted ZIP size metadata, across all parts (including unused ones).
+        try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes))) {
+            long total = 0;
+            int entries = 0;
+            byte[] buffer = new byte[8192];
+            while (zip.getNextEntry() != null) {
+                if (++entries > MAX_ZIP_ENTRIES) {
+                    throw new IOException("DOCX contains too many ZIP entries.");
+                }
+                long entryBytes = 0;
+                int read;
+                while ((read = zip.read(buffer)) != -1) {
+                    entryBytes += read;
+                    total += read;
+                    if (entryBytes > MAX_ZIP_ENTRY_BYTES || total > MAX_ZIP_EXPANDED_BYTES) {
+                        throw new IOException("DOCX ZIP expansion exceeds desktop import limits.");
+                    }
+                }
+            }
+            if (entries == 0) {
+                throw new IOException("DOCX is not a valid ZIP package.");
+            }
         }
     }
 

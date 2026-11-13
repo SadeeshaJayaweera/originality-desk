@@ -1,314 +1,527 @@
-# Writing Assistant ✍️
+# Originality Desk 🔍
 
 [![Java 17](https://img.shields.io/badge/Java-17%2B-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![JavaFX](https://img.shields.io/badge/JavaFX-21.0.2-FF6F00?logo=java&logoColor=white)](https://openjfx.io/)
-[![BootstrapFX](https://img.shields.io/badge/BootstrapFX-0.4.0-563D7C?logo=bootstrap&logoColor=white)](https://github.com/kordamp/bootstrapfx)
 [![SQLite](https://img.shields.io/badge/SQLite-3.45.1-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![Apache PDFBox](https://img.shields.io/badge/Apache%20PDFBox-3.0.5-D22128?logo=apache&logoColor=white)](https://pdfbox.apache.org/)
 [![Apache POI](https://img.shields.io/badge/Apache%20POI-5.2.5-D22128?logo=apache&logoColor=white)](https://poi.apache.org/)
-[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-v1beta-4285F4?logo=google&logoColor=white)](https://ai.google.dev/)
-[![JUnit 5](https://img.shields.io/badge/JUnit-5.10.2-25A162?logo=junit5&logoColor=white)](https://junit.org/junit5/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)]()
 
-An academic and professional desktop writing assistant engineered in **Java 17** with **JavaFX + BootstrapFX**, **SQLite**, and **Apache POI**. Writing Assistant bridges the gap between AI-assisted drafting and strict academic integrity by offering intelligent style rewriting, citation-safe quote paraphrasing, and a **100% offline paraphrase-similarity safeguard**.
+An evidence-based academic document originality, similarity detection, and citation analysis platform. Built in **Java 17** with a zero-external-dependency embedded server, a deterministic multi-strategy similarity engine, and an accessible, responsive browser workspace.
+
+Originality Desk bridges the gap between mechanical similarity scores and genuine academic integrity review by providing transparent, reproducible passage-level evidence, citation context analysis, human reviewer decision workflows, and multi-format report exports (PDF, HTML, JSON, CSV).
+
+The repository also preserves the original **Desktop Writing Assistant** (JavaFX + BootstrapFX) for offline authorial drafting, style rewriting, and citation formatting.
 
 ---
 
-## 🎯 The Problem Solved
+## 📸 Screenshots
 
-### The Problem in Academic & Professional Writing
-1. **Unintentional Patchwriting & Academic Misconduct**: Writers frequently attempt to paraphrase external research by swapping individual words with synonyms while preserving the original author's sentence structure. Academic institutions classify this as *patchwriting* or mosaic plagiarism.
-2. **Citation Formatting Inconsistencies**: Applying formatting rules across APA 7th, MLA 9th, and Chicago 17th author-date editions (in-text parentheticals, multi-author "et al." rules, title italics, and 0.5-inch hanging indents) is tedious and prone to human error.
-3. **Loss of Session State & Rewrite Audit History**: Lightweight text editors lack structured persistence for citation metadata, document bibliographies, and an audit log of what was rewritten, why, and which alternative was chosen.
-4. **Cloud Privacy & Vendor Lock-in**: Most similarity detection tools require uploading entire proprietary manuscripts to remote cloud servers, violating non-disclosure agreements or confidentiality requirements.
+Captured from the live application serving synthetic test corpora in Chromium:
 
-### The Solution Provided by Writing Assistant
-Writing Assistant delivers a privacy-first, offline-capable desktop environment with ethical boundaries between authorial style refinement and external source attribution:
+| Public Landing Page | Evidence-Led Analysis Report | Mobile Viewport (Dark Theme) |
+|---|---|---|
+| [![Public Landing](docs/screenshots/landing.png)](docs/screenshots/landing.png) | [![Analysis Report](docs/screenshots/report.png)](docs/screenshots/report.png) | [![Mobile Report](docs/screenshots/mobile.png)](docs/screenshots/mobile.png) |
+| *Responsive landing page with feature explanations and interactive demonstration.* | *Traceable side-by-side passage comparison, citation observations, and human reviewer notes.* | *Persisted dark theme, keyboard-accessible navigation on a 390 × 844 viewport.* |
 
-- **AI Style Rewriter (Phase 1)**: Operates strictly on the author's *own* writing across 5 specialized modes (**Tighten**, **Clarity**, **Formal**, **Casual**, **Grammar Fix**) with 1-click editor replacement and SQLite audit logging.
-- **Citation-Safe Quote Paraphraser (Phase 2)**: Paraphrases external source quotes using prompts explicitly instructed to restructure clauses and reorganize ideas rather than swap synonyms, while automatically appending formatted in-text citations.
-- **100% Offline Paraphrase-Similarity Safeguard (Phase 3)**: A deterministic, local algorithm that evaluates candidate text against source quotes using **Word N-Grams ($n=2,3,4$)**, **Longest Common Subsequence (LCS)**, and **Levenshtein Edit Distance**, highlighting verbatim overlapping spans with character-level accuracy.
-- **Relational Persistence (Data Layer)**: An embedded SQLite database managing documents, citation libraries, per-document bibliography links, and rewrite audit logs.
-- **Academic POI Word Export (Phase 4)**: Direct export to Microsoft Word (`.docx`) with parsed italic publication titles and 0.5-inch hanging indent reference lists.
+*See [docs/screenshots/README.md](docs/screenshots/README.md) for observed test execution metrics and capture digests.*
 
 ---
 
-## 🏗️ Application Architecture
+## 🎯 The Problem & Our Solution
 
-Writing Assistant is built on a clean, decoupled 5-tier architecture:
+### The Problem in Academic Integrity Review
+1. **Opaque "Similarity Percentages"**: Commercial plagiarism detection tools return a single, unexplainable percentage score without distinguishing between verbatim copying, legitimate citations, common academic phrasing, or bibliography lists.
+2. **Fabricated & Unreliable AI Detectors**: Heuristic AI detectors generate alarming false-positive rates on non-native English writing and formal academic prose, frequently leading to unjust accusations of misconduct.
+3. **Data Privacy & Surveillance Concerns**: Uploading confidential academic manuscripts, patent applications, or grant proposals to third-party cloud servers risks intellectual property leaks and breaches non-disclosure agreements.
+4. **Patchwriting & Synonym Substitution**: Superficial word-swapping tools bypass simple exact-string checks while retaining the original author's structural sequence.
+
+### The Solution Provided by Originality Desk
+- **Evidence-First Transparency**: Similarity is reported as verifiable passage-level evidence pointing to explicit, authorized reference documents.
+- **Independent Metric Decomposition**: Distinct metrics for **Exact Matches**, **Near-Duplicate Paraphrasing**, **Quoted Passages**, and **Bibliography Overlap** using interval union mathematics that prevents double-counting.
+- **Citation-Aware Context**: Automatic detection of standard academic citation styles (APA, IEEE, MLA, Harvard, Vancouver) adjacent to matching passages.
+- **Human Reviewer Decisions**: Tools for lecturers and supervisors to mark passages as acceptable citations, missing attributions, or confirmed quotations with persistent reviewer notes.
+- **100% Offline-First Privacy**: The core similarity detection engine runs completely in-process. Documents are never transmitted to third-party AI APIs or external web crawlers.
+
+---
+
+## 🏗️ System Architecture & Workflows
+
+### 1. Overall System Architecture
 
 ```mermaid
-graph TD
-    subgraph UI_Layer ["Presentation Layer (JavaFX + BootstrapFX)"]
-        UI_App["WritingAssistantApp / Main.java"]
-        UI_Main["MainController (FXML)"]
-        UI_ParaDlg["ParaphraseDialog (Wizard Modal)"]
-        UI_SetDlg["SettingsDialog (Preferences Modal)"]
+flowchart TD
+    subgraph Clients ["Client Layer"]
+        Browser["Modern Web Browser (SPA)"]
+        CLI["API Clients / cURL"]
+        DesktopApp["Desktop Writing Assistant (JavaFX 21)"]
     end
 
-    subgraph Core_Engines ["Core Business Engines (com.writingassistant.core)"]
-        subgraph Rewrite_Module ["Phase 1: Style Rewriter"]
-            RE_Engine["DefaultRewriteEngine"]
-            RE_Prompts["RewritePromptTemplates"]
-            RE_Parser["RewriteResponseParser"]
-            RE_Cache["RewriteCache (Memory / SQLite)"]
+    subgraph Ingress ["Ingress & Security Boundary"]
+        ReverseProxy["TLS Reverse Proxy (Nginx / Caddy)"]
+    end
+
+    subgraph Server ["Originality Desk Application Server (Java 17)"]
+        HttpListener["Embedded JDK HttpServer (Port 8080)"]
+        SecurityFilter["Security Filter (Host/Origin CSRF Check, Limiter, CSP)"]
+        RestAPI["REST API Router (/api/v1/*)"]
+        
+        subgraph Core_Engines ["Core Analysis & Document Engines"]
+            DocExtractor["Document Extractor (PDF, DOCX, TXT)"]
+            TextNormalizer["Text Normalizer (Unicode NFC, Offsets)"]
+            EvidenceEngine["Similarity Engine (Exact N-gram, Near Shingling)"]
+            CitationDetector["Citation Pattern Detector (APA/IEEE/MLA)"]
+            ReportGen["Multi-Format Report Generator (PDFBox, HTML, CSV)"]
         end
 
-        subgraph Citation_Module ["Phase 2: Citation & Paraphrase"]
-            CE_Engine["DefaultCitationEngine"]
-            CE_Para["QuoteParaphraser"]
-            CE_Formatter["CitationFormatter (APA/MLA/Chicago)"]
-        end
-
-        subgraph Similarity_Module ["Phase 3: Local Similarity Safeguard"]
-            SE_Engine["DefaultSimilarityChecker"]
-            SE_Tokenizer["Tokenizer & N-Gram (2/3/4)"]
-            SE_LCS["Word LCS Calculator"]
-            SE_Lev["Levenshtein Distance"]
-            SE_Spans["MatchedSpan Extractor"]
+        subgraph Background ["Background Processing"]
+            JobQueue["Durable Job Dispatcher"]
+            Worker["Bounded Computation Worker Thread"]
         end
     end
 
-    subgraph Data_Layer ["Persistence Layer (com.writingassistant.data)"]
-        DB_Manager["DatabaseManager (SQLite WAL)"]
-        DAO_Doc["SqliteDocumentDao (Documents & History)"]
-        DAO_Cit["CitationLibrary (Search & Bibliography)"]
-        POI_Service["DocxService (Apache POI Word Export)"]
+    subgraph Storage ["Storage & Persistence Layer"]
+        DB["SQLite 3.45 Database (WAL Mode, server.sqlite3)"]
+        BlobStore["Content-Addressed Blobs (POSIX 0700, /documents)"]
     end
 
-    subgraph Infrastructure_Layer ["Infrastructure & AI Integration"]
-        AI_Client["GeminiClient (HTTP/2 Connection Pool)"]
-        CFG_Manager["ConfigManager (~/.writing-assistant/config.json)"]
-        LOG_Manager["AppLogger (Rotating 5MB File Handler)"]
-    end
-
-    UI_Main --> RE_Engine
-    UI_Main --> CE_Engine
-    UI_Main --> SE_Engine
-    UI_Main --> DAO_Doc
-    UI_Main --> DAO_Cit
-    UI_Main --> POI_Service
-    UI_Main --> UI_ParaDlg
-    UI_Main --> UI_SetDlg
-
-    RE_Engine --> AI_Client
-    RE_Engine --> RE_Cache
-    CE_Para --> AI_Client
-    AI_Client --> CFG_Manager
-    DAO_Doc --> DB_Manager
-    DAO_Cit --> DB_Manager
-```
-
-### Package & Module Responsibilities
-
-| Package | Key Classes | Responsibility |
-| :--- | :--- | :--- |
-| **`com.writingassistant`** | `Main.java` | Dual-mode launcher supporting JavaFX GUI launch and `--smoke-test` headless CLI diagnostics. |
-| **`com.writingassistant.ai`** | `GeminiClient`, `AiResponse`, `GeminiStatus`, `AiFeatureUnavailableException` | Thin HTTP client communicating with Google Generative Language v1beta models with unconfigured key fallback. |
-| **`com.writingassistant.config`** | `AppConfig`, `ConfigManager` | Cross-platform configuration management resolving `~/.writing-assistant` (macOS/Linux) or `%APPDATA%\WritingAssistant` (Windows). |
-| **`com.writingassistant.core.rewrite`** | `DefaultRewriteEngine`, `RewritePromptTemplates`, `RewriteResponseParser`, `RewriteCache`, `RewriteMode` | 5-mode authorial style rewriting, prompt engineering, multi-pass regex parsing, and caching. |
-| **`com.writingassistant.core.citation`** | `DefaultCitationEngine`, `QuoteParaphraser`, `CitationFormatter`, `SourceQuote`, `CitedParaphrase`, `CitationStyle` | Citation metadata models, anti-patchwriting quote paraphraser, and APA 7th, MLA 9th, Chicago 17th formatters. |
-| **`com.writingassistant.core.similarity`** | `DefaultSimilarityChecker`, `SimilarityConfig`, `SimilarityReport`, `MatchedSpan`, `SimilarityRisk` | 100% offline similarity engine combining word n-grams ($n=2,3,4$), word LCS ratio, edit distance, and matched span extraction. |
-| **`com.writingassistant.data`** | `DatabaseManager`, `SqliteDocumentDao`, `CitationLibrary`, `DocxService`, `DocumentRecord`, `RewriteHistoryEntry` | SQLite database manager with WAL mode, schema migrations, document DAO, citation library autocomplete, and Apache POI docx export. |
-| **`com.writingassistant.logging`** | `AppLogger` | Rotating file logger (5 MB per file, max 5 backups) with automatic shutdown hook flushing. |
-| **`com.writingassistant.ui`** | `WritingAssistantApp`, `MainController`, `ParaphraseDialog`, `SettingsDialog` | JavaFX views styled exclusively with BootstrapFX, dialogs, recent documents menu, and dynamic text highlighting. |
-
----
-
-## 💻 Complete Technology Stack
-
-| Technology | Category | Version | Role & Justification |
-| :--- | :--- | :--- | :--- |
-| **Java (OpenJDK)** | Language / Runtime | `17 LTS` | Modern language features: Records, Pattern Matching, `java.net.http.HttpClient`, and strict strong typing. |
-| **OpenJFX (JavaFX)** | GUI Framework | `21.0.2` | High-performance, cross-platform native desktop UI rendering with FXML and reactive property bindings. |
-| **BootstrapFX** | UI Design System | `0.4.0` | Professional Bootstrap CSS styling (`btn`, `panel`, `lbl`, `alert`, `h1`-`h6`) without custom CSS or HTML overhead. |
-| **Apache POI (`poi-ooxml`)** | Document Processing | `5.2.5` | Reads and writes Microsoft Word (`.docx`) documents with paragraph formatting, italics, and 0.5-inch hanging indents. |
-| **SQLite JDBC** | Embedded Database | `3.45.1.0` | Zero-configuration, ACID-compliant embedded database with Write-Ahead Logging (WAL) for multi-session persistence. |
-| **Google Gson** | JSON Serialization | `2.10.1` | Serialization of configuration files and structured Gemini API JSON payloads. |
-| **Google Gemini API** | AI Provider | `v1beta` | Generative language models (`gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-2.0-flash`) for style rewriting and paraphrasing. |
-| **JUnit 5 (Jupiter)** | Automated Testing | `5.10.2` | Comprehensive test suite covering unit tests, integration tests, and smoke tests across all application layers. |
-| **Apache Maven** | Build Automation | `3.8+` | Dependency resolution, compilation, shaded executable packaging, and `jpackage` installer profiles. |
-
----
-
-## 🗄️ Relational Database Schema (SQLite)
-
-Writing Assistant initializes an embedded SQLite database (`writing_assistant.db`) with foreign keys and WAL mode:
-
-```sql
--- Tracked working documents
-CREATE TABLE IF NOT EXISTS documents (
-    id TEXT PRIMARY KEY,
-    title TEXT NOT NULL,
-    file_path TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_opened TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Reusable global citation library
-CREATE TABLE IF NOT EXISTS citation_library (
-    id TEXT PRIMARY KEY,
-    author TEXT NOT NULL,
-    year TEXT,
-    title TEXT NOT NULL,
-    container TEXT,
-    page_number TEXT,
-    url_or_doi TEXT,
-    source_type TEXT NOT NULL,
-    style_preference TEXT DEFAULT 'APA',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Many-to-many document to citation linking for bibliographies
-CREATE TABLE IF NOT EXISTS document_citations (
-    document_id TEXT NOT NULL,
-    citation_id TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (document_id, citation_id),
-    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
-    FOREIGN KEY (citation_id) REFERENCES citation_library(id) ON DELETE CASCADE
-);
-
--- Full audit log of accepted AI rewrites
-CREATE TABLE IF NOT EXISTS rewrite_history (
-    id TEXT PRIMARY KEY,
-    document_id TEXT,
-    original_text TEXT NOT NULL,
-    chosen_mode TEXT NOT NULL,
-    chosen_alternative TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE SET NULL
-);
+    Browser -->|HTTPS| ReverseProxy
+    CLI -->|HTTPS| ReverseProxy
+    ReverseProxy -->|HTTP| HttpListener
+    HttpListener --> SecurityFilter
+    SecurityFilter --> RestAPI
+    RestAPI --> Core_Engines
+    RestAPI --> JobQueue
+    JobQueue --> Worker
+    Worker --> Core_Engines
+    Core_Engines --> DB
+    Core_Engines --> BlobStore
+    DesktopApp -.->|Offline Direct Access| DB
 ```
 
 ---
 
-## 🔍 Local Similarity Checker Mechanics
+### 2. Document Processing Lifecycle
 
-The local similarity checker operates **100% offline** using a multi-signal heuristic formula:
-
-$$\text{Composite Score} = (0.35 \times \text{N-Gram}) + (0.40 \times \text{LCS Ratio}) + (0.25 \times \text{Levenshtein})$$
-
-1. **Word N-Gram Overlap ($n=2,3,4$) (Weight: 35%)**: Measures shared sequences of consecutive words between the candidate paraphrase and source quote. High shared n-grams indicate that sentence structure was retained.
-2. **Word Longest Common Subsequence (LCS) Ratio (Weight: 40%)**: Calculates the length of the longest ordered sequence of common words relative to the shorter text length, detecting unchanged contiguous thought progressions.
-3. **Sentence-Level Levenshtein Edit Distance (Weight: 25%)**: Measures character edit distance normalized against text length to capture phrase-level surface similarities.
-4. **Verbatim Span Extractor**: Pinpoints exact character offsets `[startIndex, endIndex]` for any shared word sequences $\ge 3$ words, rendering underlined highlights in the UI.
-
-### Calibrated Risk Classification
-- 🟢 **LOW RISK** (<25%): Substantially restructured with minimal textual overlap.
-- 🟡 **MODERATE RISK** (25%–55%): Shared phrasing or sequence structure detected; further restructuring recommended.
-- 🔴 **HIGH RISK** (>55%): Verbatim overlap or structural mirroring detected; direct quotation or thorough rewrite needed.
+```mermaid
+stateDiagram-v2
+    [*] --> UPLOADED: File Received via Stream
+    UPLOADED --> VALIDATING: Size & Magic Byte Check
+    VALIDATING --> QUEUED: SHA-256 Deduplication & Blob Storage
+    VALIDATING --> FAILED: Invalid Type or Over 10MB
+    QUEUED --> EXTRACTING: Claimed by Background Worker
+    EXTRACTING --> NORMALISING: Text Extracted (PDFBox / POI)
+    EXTRACTING --> FAILED: Parser Error or Bomb Detected
+    NORMALISING --> SEGMENTING: UTF-16 Offsets & Tokens Mapped
+    SEGMENTING --> READY: Available for Analysis
+    READY --> ANALYSING: Analysis Job Queued
+    ANALYSING --> GENERATING_REPORT: Similarity & Citations Evaluated
+    GENERATING_REPORT --> COMPLETED: Snapshot Persisted
+    ANALYSING --> FAILED: Execution Timeout (60s)
+    ANALYSING --> CANCELLED: User Requested Cancellation
+    FAILED --> RETRYING: Exponential Backoff (Max 3)
+    RETRYING --> QUEUED
+    COMPLETED --> [*]
+```
 
 ---
 
-## 🚀 Getting Started
+### 3. Similarity Analysis Pipeline
+
+```mermaid
+flowchart TD
+    subgraph Ingestion ["1. Document Ingestion"]
+        DocSub["Submitted Document"]
+        DocRefs["Selected Reference Documents"]
+    end
+
+    subgraph Normalization ["2. Normalization & Tokenization"]
+        Norm["Unicode NFC, Line-Break & Homoglyph Normalizer"]
+        Offsets["Preserve Original UTF-16 Character Offsets"]
+    end
+
+    subgraph Similarity ["3. Multi-Strategy Similarity Analysis"]
+        Exact["Exact Matcher: Inverted N-Gram Index (n >= 8)"]
+        Near["Near Matcher: Word Shingling & Jaccard Index (t >= 0.70)"]
+        Union["Interval Union Coverage: Non-Overlapping Spans"]
+    end
+
+    subgraph Citation ["4. Citation Contextualization"]
+        Cite["Citation Detector: Regex Patterns & Quotation Search"]
+        Context["Classify: Quoted / Cited / Uncited Matches"]
+    end
+
+    subgraph Persistence ["5. Snapshot & Exports"]
+        Snapshot["Persist Immutable Analysis Snapshot"]
+        Exports["Generate Exports: PDF, HTML, JSON, CSV"]
+    end
+
+    DocSub --> Norm
+    DocRefs --> Norm
+    Norm --> Offsets
+    Offsets --> Exact
+    Offsets --> Near
+    Exact --> Union
+    Near --> Union
+    Union --> Context
+    Cite --> Context
+    Context --> Snapshot
+    Snapshot --> Exports
+```
+
+---
+
+### 4. Authentication & Workspace Authorization
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User / Browser
+    participant Svr as Originality Desk Server
+    participant DB as SQLite Relational Database
+
+    User->>Svr: POST /api/v1/auth/register (name, email, password, workspace)
+    Note over Svr: PBKDF2-HMAC-SHA256 (210,000 iterations)
+    Svr->>DB: INSERT into workspaces, users (Role: INSTITUTION_ADMIN)
+    Note over Svr: Generate 256-bit cryptographically secure token
+    Svr->>DB: INSERT into sessions (SHA-256 token_hash, 12h expiry)
+    Svr-->>User: 201 Created (Set-Cookie: desk_session=...; HttpOnly; SameSite=Strict)
+
+    User->>Svr: POST /api/v1/documents (with Origin header & desk_session cookie)
+    Note over Svr: Validate Host authority & Origin == publicOrigin (Anti-CSRF)
+    Svr->>DB: SELECT workspace_id, role FROM sessions JOIN users
+    Note over Svr: Derive workspace_id strictly from session
+    Svr->>DB: INSERT INTO documents WHERE workspace_id = ?
+    Svr-->>User: 201 Created (Document Metadata)
+```
+
+---
+
+### 5. Relational Database Entity-Relationship Diagram
+
+```mermaid
+erDiagram
+    WORKSPACES ||--o{ USERS : contains
+    WORKSPACES ||--o{ DOCUMENTS : owns
+    WORKSPACES ||--o{ ANALYSES : runs
+    WORKSPACES ||--o{ JOBS : tracks
+    WORKSPACES ||--o{ AUDIT_LOGS : records
+    USERS ||--o{ SESSIONS : establishes
+    USERS ||--o{ REVIEWS : authors
+    DOCUMENTS ||--o{ ANALYSES : submitted_as
+    ANALYSES ||--o{ ANALYSIS_SOURCES : references
+    DOCUMENTS ||--o{ ANALYSIS_SOURCES : included_in
+    ANALYSES ||--o{ REVIEWS : annotated_by
+
+    WORKSPACES {
+        string id PK
+        string name
+        string created_at
+    }
+    USERS {
+        string id PK
+        string workspace_id FK
+        string email UK
+        string name
+        string role
+        string password_hash
+        string created_at
+    }
+    SESSIONS {
+        string token_hash PK
+        string workspace_id FK
+        string user_id FK
+        integer expires_at
+        integer created_at
+    }
+    DOCUMENTS {
+        string id PK
+        string workspace_id FK
+        string title
+        string filename
+        string kind
+        string status
+        string sha256
+        string storage_name UK
+        integer word_count
+        integer page_count
+        integer bytes
+        string text
+    }
+    ANALYSES {
+        string id PK
+        string workspace_id FK
+        string document_id FK
+        string title
+        string status
+        string profile
+        integer source_count
+        string result_json
+        string idempotency_key UK
+    }
+    ANALYSIS_SOURCES {
+        string workspace_id PK,FK
+        string analysis_id PK,FK
+        string document_id PK,FK
+    }
+    JOBS {
+        string id PK
+        string workspace_id FK
+        string kind
+        string resource_id
+        string status
+        integer attempts
+        integer available_at
+    }
+    REVIEWS {
+        string id PK
+        string workspace_id FK
+        string analysis_id FK
+        string user_id FK
+        integer match_index
+        string decision
+        string note
+        string created_at
+    }
+    AUDIT_LOGS {
+        integer id PK
+        string workspace_id FK
+        string user_id
+        string action
+        string resource_id
+        string created_at
+    }
+```
+
+---
+
+### 6. Background Job Worker & Failure Recovery
+
+```mermaid
+flowchart LR
+    API["API Request"] -->|Enqueue| JobsTable[("jobs Table (SQLite)")]
+    Dispatcher["JobWorker Dispatcher Thread"] -->|Poll available_at| JobsTable
+    Dispatcher -->|Claim & Status=RUNNING| Computation["Single-Thread Bounded Worker"]
+    Computation -->|Execute Extraction or Similarity| CoreEngine["Analysis Engine"]
+    CoreEngine -->|Success| CommitSuccess["Mark COMPLETED & Save Result"]
+    CoreEngine -->|Transient Error| Backoff["Exponential Backoff Retry (Max 3)"]
+    CoreEngine -->|Timeout >60s| CommitFail["Mark FAILED with Error Trace"]
+    CommitSuccess --> JobsTable
+    Backoff --> JobsTable
+    CommitFail --> JobsTable
+
+    Startup["Server Startup"] --> Recovery["JobWorker.recover()"]
+    Recovery -->|Interrupted RUNNING Jobs| Reset["Reset to QUEUED or FAILED"]
+    Recovery -->|Orphaned Blobs| Prune["Wipe Blobs Missing in DB"]
+```
+
+---
+
+## 💻 Technology Stack
+
+| Component | Technology | Rationale |
+|---|---|---|
+| **Programming Language** | Java 17 LTS (compile target 17) | Strict memory safety, cross-platform portability, high throughput |
+| **HTTP Server** | JDK `HttpServer` (Java Standard Library) | Zero external web framework dependencies, minimal attack surface |
+| **Database & Persistence** | SQLite 3.45 via `sqlite-jdbc` | Full transactional ACID safety, WAL mode, zero configuration |
+| **PDF Extraction & Export** | Apache PDFBox 3.0.5 | Native vector PDF generation and bounded text extraction |
+| **DOCX Processing** | Apache POI 5.2.5 | Reliable Office Open XML extraction with decompression protection |
+| **JSON Serialization** | Google Gson 2.10.1 | Fast, strict JSON binding for configurations, APIs, and snapshots |
+| **Frontend Architecture** | Vanilla HTML5, CSS3, JavaScript (ES6) | Zero npm runtime dependencies, fast loading, full keyboard accessibility |
+| **Desktop GUI** | JavaFX 21 + BootstrapFX 0.4.0 | Preserved desktop authoring tool for offline writing and citation styling |
+| **Test Automation** | JUnit 5 + Node Test Runner + Python | Multi-tier validation spanning unit, API, markup, and benchmark suites |
+
+---
+
+## 🚀 Quick Start & Local Setup
 
 ### Prerequisites
-- **Java Development Kit (JDK) 17** or higher.
-- **Apache Maven 3.8+**.
-- *(Optional)* A Google Gemini API key for AI features. (Offline similarity checking, persistence, and docx export work without an API key).
+- **Java 17+** (Eclipse Temurin or OpenJDK recommended)
+- **Apache Maven 3.9+**
+- **Node.js 20+** (optional, for frontend unit tests)
+- **Python 3.10+** (optional, for evaluation benchmark)
 
-### Installation & Quickstart
-
-```bash
-# 1. Clone the repository
+### 1. Build the Application
+```sh
+# Clone repository
 git clone https://github.com/SadeeshaJayaweera/originality-desk.git
 cd originality-desk
 
-# 2. Run the automated test suite (57 tests)
-mvn clean test
+# Build shaded executable JAR
+mvn clean package -DskipTests
+```
 
-# 3. Launch the desktop GUI via Maven
-mvn javafx:run
+### 2. Launch Originality Desk Web Server
+```sh
+# Run the standalone web server
+java -jar target/writing-assistant-1.0.0-SNAPSHOT.jar --server
 
-# 4. Or build the standalone executable Fat JAR
-mvn clean package
+# Or run directly via class name:
+java -cp target/writing-assistant-1.0.0-SNAPSHOT.jar com.writingassistant.server.OriginalityDeskServer
+```
 
-# 5. Launch the standalone Fat JAR
+Navigate to: **[http://localhost:8080](http://localhost:8080)**  
+Click **Create workspace** to initialize your institution administrator account.
+
+### 3. Launch Preserved Desktop GUI
+```sh
+# Run the JavaFX desktop writing assistant
 java -jar target/writing-assistant-1.0.0-SNAPSHOT.jar
-
-# 6. Run headless CLI diagnostics & smoke test
-java -jar target/writing-assistant-1.0.0-SNAPSHOT.jar --smoke-test
 ```
+
+*For complete setup options, see [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md).*
 
 ---
 
-## 📦 Native Desktop Installers (`jpackage`)
+## 🐳 Docker Deployment
 
-Writing Assistant includes Maven packaging profiles to create native, zero-dependency desktop installers with an embedded Java runtime:
+Run Originality Desk with Docker Compose:
 
-### macOS (`.dmg`)
-```bash
-mvn clean package -Ppackage-mac
-```
-*Manual CLI command:*
-```bash
-jpackage --type dmg \
-  --name WritingAssistant \
-  --input target \
-  --main-jar writing-assistant-1.0.0-SNAPSHOT.jar \
-  --main-class com.writingassistant.Main \
-  --app-version 1.0.0 \
-  --icon src/main/resources/com/writingassistant/ui/icons/app-icon.png \
-  --dest target/dist
+```sh
+# Copy environment template
+cp .env.example .env
+
+# Build and start container in detached mode
+docker compose up -d
+
+# Check service health
+curl -f http://localhost:8080/health/live
 ```
 
-### Windows (`.msi` / `.exe`)
-```bash
-mvn clean package -Ppackage-win
-```
-*Manual CLI command:*
-```bash
-jpackage --type msi \
-  --name WritingAssistant \
-  --input target \
-  --main-jar writing-assistant-1.0.0-SNAPSHOT.jar \
-  --main-class com.writingassistant.Main \
-  --app-version 1.0.0 \
-  --win-dir-chooser \
-  --win-menu \
-  --win-shortcut \
-  --dest target/dist
-```
-
-### Linux (`.deb`)
-```bash
-mvn clean package -Ppackage-linux
-```
-*Manual CLI command:*
-```bash
-jpackage --type deb \
-  --name writing-assistant \
-  --input target \
-  --main-jar writing-assistant-1.0.0-SNAPSHOT.jar \
-  --main-class com.writingassistant.Main \
-  --app-version 1.0.0 \
-  --linux-shortcut \
-  --dest target/dist
-```
+*See [docs/PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) for Nginx configuration, TLS termination, and systemd service setups.*
 
 ---
 
-## 🧪 Testing & Quality Assurance
+## ⚙️ Environment Variables
 
-Writing Assistant is thoroughly tested with **57 passing automated tests** across all architectural layers:
-- **Unit Tests**: `ConfigManagerTest`, `GeminiConnectivityTest`, `RewriteResponseParserTest`, `CitationFormatterTest`, `DefaultSimilarityCheckerTest`, `DocxServiceTest`, `DatabaseManagerTest`, `SqliteDocumentDaoTest`, `CitationLibraryTest`, `AppLoggerTest`.
-- **Smoke Tests**: `RewriteSmokeTest`, `CitationSmokeTest`, `SimilaritySmokeTest`, `SessionPersistenceSmokeTest`.
-- **Integration Tests**: `EndToEndWorkflowTest` (executes the complete open $\rightarrow$ rewrite $\rightarrow$ paraphrase $\rightarrow$ similarity $\rightarrow$ export lifecycle).
-- **Manual Verification**: See [TESTING.md](file:///Users/macboookpro/originality-desk/TESTING.md) for step-by-step test scenarios for style modes, citation styles, and offline recovery.
+| Variable | Default | Purpose |
+|---|---|---|
+| `DESK_HOST` | `127.0.0.1` | Network interface address to bind to (`0.0.0.0` in Docker). |
+| `DESK_PORT` | `8080` | Port for the HTTP server. |
+| `DESK_PUBLIC_ORIGIN` | `http://localhost:8080` | Canonical browser origin. Required for Host and CSRF Origin validation. |
+| `DESK_DATA_DIR` | `./desk-server-data` | Directory storing SQLite database, WAL files, and document blobs. |
+| `DESK_SECURE_COOKIES`| `false` | Set to `true` in production to enforce HTTPS cookie flag. |
+| `DESK_RETENTION_DAYS` | `0` | Automatic document retention limit in days (0 = retain indefinitely). |
+| `DESK_JOB_TIMEOUT_SECONDS` | `60` | Bounded execution deadline per background job. |
 
----
-
-## ⚖️ Known Limitations & Ethical Disclaimer
-
-> [!IMPORTANT]
-> **Authoring Aid vs. Plagiarism Detection Disclaimer**:
-> 1. **Educational Authoring Aid**: The local similarity checker uses deterministic textual overlap heuristics (word n-grams, longest common subsequences, edit distance). It is designed to assist authors in identifying unintentional patchwriting and ensuring structural reorganization.
-> 2. **Not a Plagiarism Evasion Tool**: The tool is **not** designed to bypass or guarantee passing third-party plagiarism detection services (e.g., Turnitin, SafeAssign, Copyleaks), which rely on proprietary web crawlers, institutional repositories, and semantic vector embeddings.
-> 3. **Offline Scope**: Local similarity checking, SQLite persistence, citation formatting, and Word export work 100% offline. AI style rewriting and paraphrasing require an active internet connection and a configured Gemini API key.
+*Detailed reference in [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md).*
 
 ---
 
-## 📄 License & Attribution
+## 🧪 Test Execution & Verification
 
-Developed by **Sadeesha Jayaweera** (`sadeesha.jayaweera@gmail.com`).  
-Licensed under the [MIT License](LICENSE).
+Run the comprehensive multi-tier test suites:
+
+```sh
+# 1. Run all Java unit and integration tests (154 tests)
+mvn test
+
+# 2. Run JavaScript frontend and markup tests (16 tests)
+node scripts/e2e/fixtures.test.cjs
+node scripts/e2e/markup.test.cjs
+node src/main/resources/web/frontend.test.cjs
+
+# 3. Verify synthetic evaluation benchmark (32 cases, 2,880 timed calls)
+python3 scripts/evaluation/run.py --verify-only scripts/evaluation/results
+```
+
+*Detailed verification summary in [docs/IMPLEMENTATION_COMPLETION_REPORT.md](docs/IMPLEMENTATION_COMPLETION_REPORT.md).*
+
+---
+
+## 📡 REST API Reference
+
+The server exposes a clean REST API under `/api/v1/*`. All mutating requests require authentication and strict `Origin` validation.
+
+| Endpoint | Method | Role | Description |
+|---|---|---|---|
+| `/health/live` | `GET` | Public | Liveness probe returning server status. |
+| `/health/ready` | `GET` | Public | Readiness probe checking database & job worker. |
+| `/api/v1/auth/register` | `POST` | Public | Register new user and workspace (creates `INSTITUTION_ADMIN`). |
+| `/api/v1/auth/login` | `POST` | Public | Authenticate user and issue opaque session cookie. |
+| `/api/v1/auth/me` | `GET` | Member | Retrieve current user profile and workspace metadata. |
+| `/api/v1/auth/logout` | `POST` | Member | Invalidate current session. |
+| `/api/v1/dashboard` | `GET` | Member | Retrieve workspace metrics, recent analyses, and storage stats. |
+| `/api/v1/documents` | `GET` | Member | List workspace documents with status and pagination. |
+| `/api/v1/documents` | `POST` | Member | Stream raw file upload (PDF, DOCX, TXT; 10MB max). |
+| `/api/v1/documents/:id` | `GET` | Member | Get document status, metadata, and extracted text. |
+| `/api/v1/documents/:id` | `DELETE`| Member | Securely delete document and all dependent analyses. |
+| `/api/v1/analyses` | `GET` | Member | List analyses with status and pagination. |
+| `/api/v1/analyses` | `POST` | Member | Submit new similarity analysis with profile & source IDs. |
+| `/api/v1/analyses/:id` | `GET` | Member | Retrieve analysis result snapshot with passage matches. |
+| `/api/v1/analyses/:id/cancel` | `POST` | Member | Cancel a queued or running analysis. |
+| `/api/v1/analyses/:id/reviews`| `GET/POST` | Reviewer | Retrieve or record human reviewer decisions and notes. |
+| `/api/v1/reports/:id/json` | `GET` | Member | Download complete evidence report as JSON. |
+| `/api/v1/reports/:id/html` | `GET` | Member | Download standalone interactive HTML report. |
+| `/api/v1/reports/:id/csv` | `GET` | Member | Download passage evidence rows as CSV. |
+| `/api/v1/reports/:id/pdf` | `GET` | Member | Download publication-grade vector PDF report. |
+| `/api/v1/admin/health` | `GET` | Admin | Inspect operational metrics, memory, and queue depth. |
+| `/api/v1/admin/jobs` | `GET` | Admin | Paginated list of background extraction and analysis jobs. |
+| `/api/v1/admin/audit-logs` | `GET` | Admin | Paginated audit trail of workspace security actions. |
+
+*Full API contract and OpenAPI specification in [docs/API.md](docs/API.md) and [docs/openapi.yaml](docs/openapi.yaml).*
+
+---
+
+## 🔒 Security Architecture
+
+- **Tenant Isolation**: Every database operation is constrained by the server-derived `workspace_id`. Cross-tenant queries return 404.
+- **CSRF Defense**: Zero CORS support; all state-changing API operations strictly enforce `Origin == DESK_PUBLIC_ORIGIN` and `Sec-Fetch-Site: same-origin`.
+- **Password Security**: PBKDF2-HMAC-SHA256 with 210,000 iterations and individual 16-byte random salts.
+- **Session Protection**: Host-only, `HttpOnly`, `SameSite=Strict` cookies containing random 256-bit tokens, stored only as SHA-256 hashes.
+- **Input Validation**: Magic byte file validation, ZIP decompression bomb protection (`SafeZip`), 10 MiB upload cap, strict UTF-8 JSON parsing.
+- **Secure Data Erasure**: SQLite configured with `PRAGMA secure_delete=ON`, zero-filling deleted table pages; blobs wiped immediately on deletion.
+
+*Complete security review in [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md).*
+
+---
+
+## ⚠️ Known Limitations & Disclaimers
+
+1. **Source Scope**: Originality Desk compares submissions **strictly against authorized reference documents uploaded to your workspace**. It does not crawl the open web, commercial subscription databases, or paywalled publishers.
+2. **Text Similarity $\ne$ Academic Misconduct**: High similarity scores do not prove plagiarism; low scores do not prove originality. Matches require human review to evaluate disciplinary context, quotations, and field conventions.
+3. **AI Writing Detection**: In adherence to scientific rigor, the platform refuses to manufacture unverified AI-authorship percentages. AI analysis status is honestly reported as `UNAVAILABLE` without a certified local classifier.
+4. **Single-Node Architecture**: The server uses embedded SQLite with single-process file locking, designed for bounded departmental and institutional workloads (up to thousands of documents). Horizontal clustering requires migrating to PostgreSQL and distributed object storage.
+
+---
+
+## 🗺️ Engineering Roadmap
+
+- [x] Standalone headless Java web server with REST API
+- [x] Multi-tenant workspace isolation and role-based access control
+- [x] Bounded PDF, DOCX, and TXT extraction with offset-preserving normalisation
+- [x] Inverted N-Gram exact matching and shingled near-duplicate detection
+- [x] Interval union coverage calculation (no double-counting)
+- [x] Citation observation and reference pattern detection
+- [x] Multi-format report generation (JSON, HTML, CSV, PDF)
+- [x] Human reviewer decision and annotation workflow
+- [x] Durable background job processing with crash recovery
+- [x] Responsive browser frontend with dark/light themes
+- [x] Dockerfile, Docker Compose, and CI/CD automation
+- [x] Comprehensive documentation suite and synthetic evaluation benchmark
+- [ ] Local semantic embeddings via ONNX Runtime / pgvector (Phase 2)
+- [ ] Tesseract OCR native container integration for image-only PDFs (Phase 2)
+- [ ] LTI 1.3 Advantage integration for Canvas, Moodle, and Blackboard (Phase 3)
+- [ ] Enterprise SAML 2.0 / SCIM institutional directory sync (Phase 3)
+
+---
+
+## 📚 Supplementary Documentation
+
+- 📖 **[Local Setup Guide](docs/LOCAL_SETUP.md)**: Developer prerequisites, building, running, and troubleshooting.
+- 🚀 **[Production Deployment](docs/PRODUCTION_DEPLOYMENT.md)**: Systemd service, Nginx reverse proxy, and container setup.
+- ⚙️ **[Environment Variables](docs/ENVIRONMENT_VARIABLES.md)**: Exhaustive reference for all configuration options.
+- 💾 **[Backup and Recovery](docs/BACKUP_AND_RECOVERY.md)**: Online SQLite backup, WAL checkpoints, and disaster recovery.
+- 🛠️ **[Operations Runbook](docs/OPERATIONS_RUNBOOK.md)**: Health probes, logging, troubleshooting, and maintenance.
+- 📋 **[Implementation Completion Report](docs/IMPLEMENTATION_COMPLETION_REPORT.md)**: Detailed audit and verification matrix.
+- 📊 **[Evaluation Methodology](docs/EVALUATION_METHODOLOGY.md)**: Synthetic benchmark design and confusion matrix formulas.
+- 📈 **[Benchmark Results](docs/BENCHMARK_RESULTS.md)**: Measured accuracy and CPU latency on synthetic test suites.
+- 🔐 **[Security Review](docs/SECURITY_REVIEW.md)**: Threat modeling, trust boundaries, and vulnerability mitigations.
+- 📡 **[REST API Specification](docs/API.md)**: Complete HTTP route documentation and payload contracts.
+
+---
+
+## 📄 License
+
+This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.

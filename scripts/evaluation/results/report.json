@@ -1,0 +1,3731 @@
+{
+  "schemaVersion": 1,
+  "dataset": "synthetic-source-review-v1",
+  "provenance": "Coding-assistant-authored synthetic examples with explicitly enumerated, human-reviewable policy labels and rationales. Labels are not inferred from engine output. No independent human adjudication, external research corpus or AI-authorship evaluation dataset is available.",
+  "labelPolicy": "POSITIVE queues intentionally copied prose, quotations and constructed meaning-preserving paraphrases for a hypothetical review policy. NEGATIVE excludes unrelated prose, stock boilerplate and bibliography-only overlap, and deliberately treats technical vocabulary lists and contradictory claims as nonmatching content. A contradictory claim can still contain genuine lexical overlap: a policy FP does not imply fabricated evidence. These are illustrative policy judgments, not plagiarism, scientific accuracy or authorship ground truth. Labels do not change by profile.",
+  "engineVersion": "local-evidence-1.0",
+  "overlapThreshold": 0.1,
+  "warmupRounds": 10,
+  "measuredRounds": 30,
+  "jvm": {
+    "runtimeVersion": "21.0.10",
+    "vmName": "OpenJDK 64-Bit Server VM",
+    "vendor": "Homebrew",
+    "os": "Mac OS X",
+    "osVersion": "15.8.3",
+    "architecture": "x86_64",
+    "availableProcessors": 12,
+    "inputArguments": [
+      "-Xms64m",
+      "-Xmx256m",
+      "-XX:+UseG1GC",
+      "-Dfile.encoding=UTF-8"
+    ],
+    "garbageCollectors": [
+      "G1 Young Generation",
+      "G1 Concurrent GC",
+      "G1 Old Generation"
+    ]
+  },
+  "profiles": [
+    {
+      "profile": "QUICK",
+      "metrics": {
+        "PRIMARY": {
+          "cases": 30,
+          "positives": 16,
+          "negatives": 14,
+          "tp": 7,
+          "fp": 3,
+          "tn": 11,
+          "fn": 9,
+          "precision": 0.7,
+          "recall": 0.4375,
+          "f1": 0.5384615384615384,
+          "falsePositiveRate": 0.21428571428571427,
+          "falseNegativeRate": 0.5625
+        },
+        "SEMANTIC_CHALLENGE": {
+          "cases": 2,
+          "positives": 2,
+          "negatives": 0,
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "falsePositiveRate": null,
+          "falseNegativeRate": 1.0
+        },
+        "ALL": {
+          "cases": 32,
+          "positives": 18,
+          "negatives": 14,
+          "tp": 7,
+          "fp": 3,
+          "tn": 11,
+          "fn": 11,
+          "precision": 0.7,
+          "recall": 0.3888888888888889,
+          "f1": 0.5,
+          "falsePositiveRate": 0.21428571428571427,
+          "falseNegativeRate": 0.6111111111111112
+        }
+      },
+      "timing": {
+        "samples": 960,
+        "meanMs": 0.306124371875,
+        "medianMs": 0.2371185,
+        "p95Ms": 0.798052,
+        "minMs": 0.036405,
+        "maxMs": 2.691648
+      },
+      "measurementWindowMs": 351.881225,
+      "heap": {
+        "maxBytes": 268435456,
+        "usedBeforeBytes": 8585192,
+        "usedAfterBytes": 28613800,
+        "sampledUsedHighWaterBytes": 41091048,
+        "committedBeforeBytes": 69206016,
+        "committedAfterBytes": 69206016,
+        "gcCollections": 1,
+        "gcTimeMs": 3
+      },
+      "cases": [
+        {
+          "observation": {
+            "caseId": "exact-full",
+            "category": "exact",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 18,
+            "submittedCharacters": 145,
+            "sourceCount": 1,
+            "sourceCharacters": 145,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "weather",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 144,
+                "sourceStart": 0,
+                "sourceEnd": 144,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.36428913333333335,
+            "medianMs": 0.314906,
+            "p95Ms": 0.544752,
+            "minMs": 0.235262,
+            "maxMs": 0.816452
+          }
+        },
+        {
+          "observation": {
+            "caseId": "exact-excerpt-distractor",
+            "category": "exact",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 33,
+            "submittedCharacters": 283,
+            "sourceCount": 2,
+            "sourceCharacters": 263,
+            "exactOverlap": 0.5151515151515151,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.5151515151515151,
+            "evidence": [
+              {
+                "sourceId": "glaciers",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 63,
+                "end": 211,
+                "sourceStart": 0,
+                "sourceEnd": 148,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.6741560999999999,
+            "medianMs": 0.5786145,
+            "p95Ms": 1.14603,
+            "minMs": 0.442279,
+            "maxMs": 1.277793
+          }
+        },
+        {
+          "observation": {
+            "caseId": "exact-unicode",
+            "category": "exact",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 15,
+            "submittedCharacters": 104,
+            "sourceCount": 1,
+            "sourceCharacters": 103,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "office",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 3,
+                "end": 103,
+                "sourceStart": 0,
+                "sourceEnd": 102,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3951754666666667,
+            "medianMs": 0.334543,
+            "p95Ms": 0.798052,
+            "minMs": 0.232875,
+            "maxMs": 0.813739
+          }
+        },
+        {
+          "observation": {
+            "caseId": "exact-two-source-identities",
+            "category": "exact",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 18,
+            "submittedCharacters": 143,
+            "sourceCount": 2,
+            "sourceCharacters": 286,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "archive-a",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 142,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "archive-b",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 142,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.6427201666666666,
+            "medianMs": 0.547858,
+            "p95Ms": 1.260771,
+            "minMs": 0.370606,
+            "maxMs": 2.402464
+          }
+        },
+        {
+          "observation": {
+            "caseId": "minor-one-substitution",
+            "category": "minor_substitution",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 17,
+            "submittedCharacters": 139,
+            "sourceCount": 1,
+            "sourceCharacters": 141,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.34978323333333333,
+            "medianMs": 0.3152845,
+            "p95Ms": 0.624767,
+            "minMs": 0.207869,
+            "maxMs": 0.908575
+          }
+        },
+        {
+          "observation": {
+            "caseId": "minor-two-substitutions",
+            "category": "minor_substitution",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 18,
+            "submittedCharacters": 143,
+            "sourceCount": 1,
+            "sourceCharacters": 143,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3183617,
+            "medianMs": 0.274895,
+            "p95Ms": 0.491685,
+            "minMs": 0.214463,
+            "maxMs": 0.506156
+          }
+        },
+        {
+          "observation": {
+            "caseId": "reordered-sentences",
+            "category": "reordered",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 30,
+            "submittedCharacters": 251,
+            "sourceCount": 1,
+            "sourceCharacters": 251,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "river",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 126,
+                "sourceStart": 124,
+                "sourceEnd": 250,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "river",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 128,
+                "end": 250,
+                "sourceStart": 0,
+                "sourceEnd": 122,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.7379692666666667,
+            "medianMs": 0.8050145,
+            "p95Ms": 1.08086,
+            "minMs": 0.46152,
+            "maxMs": 1.197986
+          }
+        },
+        {
+          "observation": {
+            "caseId": "reordered-content-words",
+            "category": "reordered",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 13,
+            "submittedCharacters": 108,
+            "sourceCount": 1,
+            "sourceCharacters": 108,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.21996753333333333,
+            "medianMs": 0.1852435,
+            "p95Ms": 0.396868,
+            "minMs": 0.146095,
+            "maxMs": 0.440954
+          }
+        },
+        {
+          "observation": {
+            "caseId": "lexical-paraphrase-passive",
+            "category": "lexical_paraphrase",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 17,
+            "submittedCharacters": 137,
+            "sourceCount": 1,
+            "sourceCharacters": 129,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.2564789,
+            "medianMs": 0.231537,
+            "p95Ms": 0.420922,
+            "minMs": 0.185727,
+            "maxMs": 0.453338
+          }
+        },
+        {
+          "observation": {
+            "caseId": "lexical-paraphrase-rephrased",
+            "category": "lexical_paraphrase",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 15,
+            "submittedCharacters": 123,
+            "sourceCount": 1,
+            "sourceCharacters": 123,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.25740053333333335,
+            "medianMs": 0.212053,
+            "p95Ms": 0.495058,
+            "minMs": 0.174147,
+            "maxMs": 0.625049
+          }
+        },
+        {
+          "observation": {
+            "caseId": "quote-with-citation",
+            "category": "quotes",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 23,
+            "submittedCharacters": 196,
+            "sourceCount": 1,
+            "sourceCharacters": 149,
+            "exactOverlap": 0.7391304347826086,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.7391304347826086,
+            "evidence": [
+              {
+                "sourceId": "glaciers",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 30,
+                "end": 178,
+                "sourceStart": 0,
+                "sourceEnd": 148,
+                "citationObservation": "Quotation and nearby citation pattern detected; attribution not validated"
+              }
+            ],
+            "citationKinds": {
+              "AUTHOR_YEAR": 1,
+              "QUOTATION": 1
+            },
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.5410765333333333,
+            "medianMs": 0.487592,
+            "p95Ms": 0.982715,
+            "minMs": 0.327844,
+            "maxMs": 1.023919
+          }
+        },
+        {
+          "observation": {
+            "caseId": "quote-without-citation",
+            "category": "quotes",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 21,
+            "submittedCharacters": 165,
+            "sourceCount": 1,
+            "sourceCharacters": 143,
+            "exactOverlap": 0.8571428571428571,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.8571428571428571,
+            "evidence": [
+              {
+                "sourceId": "seedlings",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 21,
+                "end": 163,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "Quotation detected; attribution not validated"
+              }
+            ],
+            "citationKinds": {
+              "QUOTATION": 1
+            },
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.46617506666666664,
+            "medianMs": 0.444593,
+            "p95Ms": 0.794716,
+            "minMs": 0.268193,
+            "maxMs": 0.985992
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-six-content-words",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 6,
+            "submittedCharacters": 52,
+            "sourceCount": 1,
+            "sourceCharacters": 52,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.11545636666666667,
+            "medianMs": 0.0964455,
+            "p95Ms": 0.229389,
+            "minMs": 0.067533,
+            "maxMs": 0.24099
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-eight-content-words",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 8,
+            "submittedCharacters": 67,
+            "sourceCount": 1,
+            "sourceCharacters": 67,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.1197665,
+            "medianMs": 0.096852,
+            "p95Ms": 0.23338,
+            "minMs": 0.079568,
+            "maxMs": 0.27632
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-eleven-content-words",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 11,
+            "submittedCharacters": 92,
+            "sourceCount": 1,
+            "sourceCharacters": 92,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.23311189999999998,
+            "medianMs": 0.129265,
+            "p95Ms": 0.277089,
+            "minMs": 0.105517,
+            "maxMs": 2.691648
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-five-content-words",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 5,
+            "submittedCharacters": 44,
+            "sourceCount": 1,
+            "sourceCharacters": 44,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.08993106666666667,
+            "medianMs": 0.072312,
+            "p95Ms": 0.26458,
+            "minMs": 0.054638,
+            "maxMs": 0.275788
+          }
+        },
+        {
+          "observation": {
+            "caseId": "semantic-synonym-heavy",
+            "category": "semantic_paraphrase",
+            "cohort": "SEMANTIC_CHALLENGE",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 9,
+            "submittedCharacters": 55,
+            "sourceCount": 1,
+            "sourceCharacters": 59,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.1031822,
+            "medianMs": 0.08836,
+            "p95Ms": 0.213896,
+            "minMs": 0.068474,
+            "maxMs": 0.304906
+          }
+        },
+        {
+          "observation": {
+            "caseId": "semantic-concept-recast",
+            "category": "semantic_paraphrase",
+            "cohort": "SEMANTIC_CHALLENGE",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 12,
+            "submittedCharacters": 69,
+            "sourceCount": 1,
+            "sourceCharacters": 48,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.12966936666666667,
+            "medianMs": 0.1161815,
+            "p95Ms": 0.282476,
+            "minMs": 0.075823,
+            "maxMs": 0.284872
+          }
+        },
+        {
+          "observation": {
+            "caseId": "boilerplate-rights",
+            "category": "boilerplate",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 13,
+            "submittedCharacters": 84,
+            "sourceCount": 1,
+            "sourceCharacters": 84,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.16352376666666665,
+            "medianMs": 0.1466395,
+            "p95Ms": 0.260845,
+            "minMs": 0.103709,
+            "maxMs": 0.311522
+          }
+        },
+        {
+          "observation": {
+            "caseId": "boilerplate-disclaimer",
+            "category": "boilerplate",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 14,
+            "submittedCharacters": 101,
+            "sourceCount": 1,
+            "sourceCharacters": 101,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.2094199333333333,
+            "medianMs": 0.1839225,
+            "p95Ms": 0.397421,
+            "minMs": 0.124984,
+            "maxMs": 0.435489
+          }
+        },
+        {
+          "observation": {
+            "caseId": "boilerplate-low-information",
+            "category": "boilerplate",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 16,
+            "submittedCharacters": 55,
+            "sourceCount": 1,
+            "sourceCharacters": 55,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.23575243333333332,
+            "medianMs": 0.1432795,
+            "p95Ms": 0.349762,
+            "minMs": 0.103401,
+            "maxMs": 2.151507
+          }
+        },
+        {
+          "observation": {
+            "caseId": "bibliography-shared-entry",
+            "category": "bibliography",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": true,
+            "outcome": "FP",
+            "wordCount": 28,
+            "submittedCharacters": 218,
+            "sourceCount": 1,
+            "sourceCharacters": 226,
+            "exactOverlap": 0.7142857142857143,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.7142857142857143,
+            "evidence": [
+              {
+                "sourceId": "bibliography",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 62,
+                "end": 218,
+                "sourceStart": 70,
+                "sourceEnd": 226,
+                "citationObservation": "Reference-list region detected; heuristic, not validated"
+              }
+            ],
+            "citationKinds": {
+              "REFERENCE_LIST": 1
+            },
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.6297144333333333,
+            "medianMs": 0.5554585,
+            "p95Ms": 0.90603,
+            "minMs": 0.415965,
+            "maxMs": 0.92355
+          }
+        },
+        {
+          "observation": {
+            "caseId": "bibliography-only",
+            "category": "bibliography",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": true,
+            "outcome": "FP",
+            "wordCount": 20,
+            "submittedCharacters": 153,
+            "sourceCount": 1,
+            "sourceCharacters": 153,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "bibliography",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 153,
+                "sourceStart": 0,
+                "sourceEnd": 153,
+                "citationObservation": "Reference-list region detected; heuristic, not validated"
+              }
+            ],
+            "citationKinds": {
+              "REFERENCE_LIST": 1
+            },
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.4583585,
+            "medianMs": 0.415229,
+            "p95Ms": 1.042466,
+            "minMs": 0.28355,
+            "maxMs": 1.048087
+          }
+        },
+        {
+          "observation": {
+            "caseId": "technical-shared-vocabulary",
+            "category": "technical",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 12,
+            "submittedCharacters": 120,
+            "sourceCount": 1,
+            "sourceCharacters": 120,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.2264894,
+            "medianMs": 0.205293,
+            "p95Ms": 0.358059,
+            "minMs": 0.149599,
+            "maxMs": 0.406136
+          }
+        },
+        {
+          "observation": {
+            "caseId": "technical-negated-claim",
+            "category": "technical",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": true,
+            "outcome": "FP",
+            "wordCount": 18,
+            "submittedCharacters": 133,
+            "sourceCount": 1,
+            "sourceCharacters": 125,
+            "exactOverlap": 0.7222222222222222,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.7222222222222222,
+            "evidence": [
+              {
+                "sourceId": "clinical",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 31,
+                "end": 132,
+                "sourceStart": 23,
+                "sourceEnd": 124,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3182235,
+            "medianMs": 0.279428,
+            "p95Ms": 0.561681,
+            "minMs": 0.205344,
+            "maxMs": 0.565067
+          }
+        },
+        {
+          "observation": {
+            "caseId": "technical-different-procedure",
+            "category": "technical",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 13,
+            "submittedCharacters": 112,
+            "sourceCount": 1,
+            "sourceCharacters": 105,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.2340351,
+            "medianMs": 0.2012255,
+            "p95Ms": 0.388334,
+            "minMs": 0.145602,
+            "maxMs": 0.493827
+          }
+        },
+        {
+          "observation": {
+            "caseId": "unrelated-geology-music",
+            "category": "unrelated",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 17,
+            "submittedCharacters": 125,
+            "sourceCount": 1,
+            "sourceCharacters": 114,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.2534617,
+            "medianMs": 0.2151335,
+            "p95Ms": 0.436121,
+            "minMs": 0.174293,
+            "maxMs": 0.566212
+          }
+        },
+        {
+          "observation": {
+            "caseId": "unrelated-clinic-architecture",
+            "category": "unrelated",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 16,
+            "submittedCharacters": 123,
+            "sourceCount": 1,
+            "sourceCharacters": 107,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.24489460000000002,
+            "medianMs": 0.2130305,
+            "p95Ms": 0.34799,
+            "minMs": 0.173951,
+            "maxMs": 0.379693
+          }
+        },
+        {
+          "observation": {
+            "caseId": "unrelated-identical-title",
+            "category": "unrelated",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 16,
+            "submittedCharacters": 121,
+            "sourceCount": 1,
+            "sourceCharacters": 127,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.22543146666666666,
+            "medianMs": 0.202814,
+            "p95Ms": 0.3602,
+            "minMs": 0.167305,
+            "maxMs": 0.373019
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-common-fragment",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 5,
+            "submittedCharacters": 24,
+            "sourceCount": 1,
+            "sourceCharacters": 24,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.06330756666666666,
+            "medianMs": 0.0554695,
+            "p95Ms": 0.119305,
+            "minMs": 0.036405,
+            "maxMs": 0.151311
+          }
+        },
+        {
+          "observation": {
+            "caseId": "boilerplate-terms",
+            "category": "boilerplate",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 16,
+            "submittedCharacters": 98,
+            "sourceCount": 1,
+            "sourceCharacters": 98,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.2500947333333333,
+            "medianMs": 0.205504,
+            "p95Ms": 0.456294,
+            "minMs": 0.147624,
+            "maxMs": 0.52171
+          }
+        },
+        {
+          "observation": {
+            "caseId": "unrelated-same-topic",
+            "category": "unrelated",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 18,
+            "submittedCharacters": 138,
+            "sourceCount": 1,
+            "sourceCharacters": 131,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.2686017333333333,
+            "medianMs": 0.2330885,
+            "p95Ms": 0.428743,
+            "minMs": 0.196857,
+            "maxMs": 0.518171
+          }
+        }
+      ]
+    },
+    {
+      "profile": "STANDARD",
+      "metrics": {
+        "PRIMARY": {
+          "cases": 30,
+          "positives": 16,
+          "negatives": 14,
+          "tp": 14,
+          "fp": 4,
+          "tn": 10,
+          "fn": 2,
+          "precision": 0.7777777777777778,
+          "recall": 0.875,
+          "f1": 0.8235294117647058,
+          "falsePositiveRate": 0.2857142857142857,
+          "falseNegativeRate": 0.125
+        },
+        "SEMANTIC_CHALLENGE": {
+          "cases": 2,
+          "positives": 2,
+          "negatives": 0,
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "falsePositiveRate": null,
+          "falseNegativeRate": 1.0
+        },
+        "ALL": {
+          "cases": 32,
+          "positives": 18,
+          "negatives": 14,
+          "tp": 14,
+          "fp": 4,
+          "tn": 10,
+          "fn": 4,
+          "precision": 0.7777777777777778,
+          "recall": 0.7777777777777778,
+          "f1": 0.7777777777777778,
+          "falsePositiveRate": 0.2857142857142857,
+          "falseNegativeRate": 0.2222222222222222
+        }
+      },
+      "timing": {
+        "samples": 960,
+        "meanMs": 0.40126895937499996,
+        "medianMs": 0.328737,
+        "p95Ms": 0.878235,
+        "minMs": 0.038254,
+        "maxMs": 4.617945
+      },
+      "measurementWindowMs": 420.466864,
+      "heap": {
+        "maxBytes": 268435456,
+        "usedBeforeBytes": 20271344,
+        "usedAfterBytes": 22457544,
+        "sampledUsedHighWaterBytes": 41373424,
+        "committedBeforeBytes": 69206016,
+        "committedAfterBytes": 69206016,
+        "gcCollections": 2,
+        "gcTimeMs": 4
+      },
+      "cases": [
+        {
+          "observation": {
+            "caseId": "exact-full",
+            "category": "exact",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 18,
+            "submittedCharacters": 145,
+            "sourceCount": 1,
+            "sourceCharacters": 145,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "weather",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 144,
+                "sourceStart": 0,
+                "sourceEnd": 144,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.4987764333333333,
+            "medianMs": 0.43839,
+            "p95Ms": 0.829067,
+            "minMs": 0.338751,
+            "maxMs": 0.981282
+          }
+        },
+        {
+          "observation": {
+            "caseId": "exact-excerpt-distractor",
+            "category": "exact",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 33,
+            "submittedCharacters": 283,
+            "sourceCount": 2,
+            "sourceCharacters": 263,
+            "exactOverlap": 0.5151515151515151,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.5151515151515151,
+            "evidence": [
+              {
+                "sourceId": "glaciers",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 63,
+                "end": 211,
+                "sourceStart": 0,
+                "sourceEnd": 148,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 1.0390169,
+            "medianMs": 0.8208125,
+            "p95Ms": 1.577791,
+            "minMs": 0.648238,
+            "maxMs": 4.617945
+          }
+        },
+        {
+          "observation": {
+            "caseId": "exact-unicode",
+            "category": "exact",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 15,
+            "submittedCharacters": 104,
+            "sourceCount": 1,
+            "sourceCharacters": 103,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "office",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 3,
+                "end": 103,
+                "sourceStart": 0,
+                "sourceEnd": 102,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.46667006666666666,
+            "medianMs": 0.4204975,
+            "p95Ms": 0.804382,
+            "minMs": 0.315169,
+            "maxMs": 0.864815
+          }
+        },
+        {
+          "observation": {
+            "caseId": "exact-two-source-identities",
+            "category": "exact",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 18,
+            "submittedCharacters": 143,
+            "sourceCount": 2,
+            "sourceCharacters": 286,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "archive-a",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 142,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "archive-b",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 142,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.7356444333333334,
+            "medianMs": 0.6553665,
+            "p95Ms": 1.265713,
+            "minMs": 0.456423,
+            "maxMs": 1.421345
+          }
+        },
+        {
+          "observation": {
+            "caseId": "minor-one-substitution",
+            "category": "minor_substitution",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 17,
+            "submittedCharacters": 139,
+            "sourceCount": 1,
+            "sourceCharacters": 141,
+            "exactOverlap": 0.6470588235294118,
+            "nearOverlap": 0.35294117647058826,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "weather",
+                "method": "LEXICAL_JACCARD",
+                "value": 0.8823529411764706,
+                "start": 0,
+                "end": 138,
+                "sourceStart": 0,
+                "sourceEnd": 140,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "weather",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 53,
+                "end": 138,
+                "sourceStart": 55,
+                "sourceEnd": 140,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.46111783333333334,
+            "medianMs": 0.4029575,
+            "p95Ms": 0.778772,
+            "minMs": 0.302459,
+            "maxMs": 0.907537
+          }
+        },
+        {
+          "observation": {
+            "caseId": "minor-two-substitutions",
+            "category": "minor_substitution",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 18,
+            "submittedCharacters": 143,
+            "sourceCount": 1,
+            "sourceCharacters": 143,
+            "exactOverlap": 0.5555555555555556,
+            "nearOverlap": 0.4444444444444444,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "seedlings",
+                "method": "LEXICAL_JACCARD",
+                "value": 0.7894736842105263,
+                "start": 0,
+                "end": 142,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "seedlings",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 68,
+                "end": 142,
+                "sourceStart": 68,
+                "sourceEnd": 142,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.4420673333333333,
+            "medianMs": 0.3952555,
+            "p95Ms": 0.710114,
+            "minMs": 0.318108,
+            "maxMs": 0.736708
+          }
+        },
+        {
+          "observation": {
+            "caseId": "reordered-sentences",
+            "category": "reordered",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 30,
+            "submittedCharacters": 251,
+            "sourceCount": 1,
+            "sourceCharacters": 251,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "river",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 126,
+                "sourceStart": 124,
+                "sourceEnd": 250,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "river",
+                "method": "LEXICAL_JACCARD",
+                "value": 1.0,
+                "start": 0,
+                "end": 250,
+                "sourceStart": 0,
+                "sourceEnd": 250,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "river",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 128,
+                "end": 250,
+                "sourceStart": 0,
+                "sourceEnd": 122,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.9771998666666667,
+            "medianMs": 0.8816905,
+            "p95Ms": 1.575447,
+            "minMs": 0.712844,
+            "maxMs": 1.665861
+          }
+        },
+        {
+          "observation": {
+            "caseId": "reordered-content-words",
+            "category": "reordered",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 13,
+            "submittedCharacters": 108,
+            "sourceCount": 1,
+            "sourceCharacters": 108,
+            "exactOverlap": 0.0,
+            "nearOverlap": 1.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "weather",
+                "method": "LEXICAL_JACCARD",
+                "value": 1.0,
+                "start": 0,
+                "end": 107,
+                "sourceStart": 0,
+                "sourceEnd": 107,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.35404616666666666,
+            "medianMs": 0.330631,
+            "p95Ms": 0.549798,
+            "minMs": 0.235037,
+            "maxMs": 0.682701
+          }
+        },
+        {
+          "observation": {
+            "caseId": "lexical-paraphrase-passive",
+            "category": "lexical_paraphrase",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 17,
+            "submittedCharacters": 137,
+            "sourceCount": 1,
+            "sourceCharacters": 129,
+            "exactOverlap": 0.5294117647058824,
+            "nearOverlap": 0.47058823529411764,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "weather",
+                "method": "LEXICAL_JACCARD",
+                "value": 1.0,
+                "start": 0,
+                "end": 136,
+                "sourceStart": 0,
+                "sourceEnd": 128,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "weather",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 67,
+                "end": 136,
+                "sourceStart": 59,
+                "sourceEnd": 128,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.4714748333333333,
+            "medianMs": 0.389963,
+            "p95Ms": 0.668609,
+            "minMs": 0.289997,
+            "maxMs": 2.194849
+          }
+        },
+        {
+          "observation": {
+            "caseId": "lexical-paraphrase-rephrased",
+            "category": "lexical_paraphrase",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 15,
+            "submittedCharacters": 123,
+            "sourceCount": 1,
+            "sourceCharacters": 123,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.35786670000000004,
+            "medianMs": 0.317409,
+            "p95Ms": 0.588102,
+            "minMs": 0.252074,
+            "maxMs": 0.825996
+          }
+        },
+        {
+          "observation": {
+            "caseId": "quote-with-citation",
+            "category": "quotes",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 23,
+            "submittedCharacters": 196,
+            "sourceCount": 1,
+            "sourceCharacters": 149,
+            "exactOverlap": 0.7391304347826086,
+            "nearOverlap": 0.2608695652173913,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "glaciers",
+                "method": "LEXICAL_JACCARD",
+                "value": 0.8,
+                "start": 0,
+                "end": 194,
+                "sourceStart": 0,
+                "sourceEnd": 148,
+                "citationObservation": "Nearby citation pattern detected; attribution not validated"
+              },
+              {
+                "sourceId": "glaciers",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 30,
+                "end": 178,
+                "sourceStart": 0,
+                "sourceEnd": 148,
+                "citationObservation": "Quotation and nearby citation pattern detected; attribution not validated"
+              }
+            ],
+            "citationKinds": {
+              "AUTHOR_YEAR": 1,
+              "QUOTATION": 1
+            },
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.5850064333333334,
+            "medianMs": 0.529151,
+            "p95Ms": 0.875517,
+            "minMs": 0.431011,
+            "maxMs": 1.077971
+          }
+        },
+        {
+          "observation": {
+            "caseId": "quote-without-citation",
+            "category": "quotes",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 21,
+            "submittedCharacters": 165,
+            "sourceCount": 1,
+            "sourceCharacters": 143,
+            "exactOverlap": 0.8571428571428571,
+            "nearOverlap": 0.14285714285714285,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "seedlings",
+                "method": "LEXICAL_JACCARD",
+                "value": 0.8947368421052632,
+                "start": 0,
+                "end": 163,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "seedlings",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 21,
+                "end": 163,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "Quotation detected; attribution not validated"
+              }
+            ],
+            "citationKinds": {
+              "QUOTATION": 1
+            },
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.49975376666666665,
+            "medianMs": 0.428588,
+            "p95Ms": 0.770011,
+            "minMs": 0.384763,
+            "maxMs": 0.81965
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-six-content-words",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 6,
+            "submittedCharacters": 52,
+            "sourceCount": 1,
+            "sourceCharacters": 52,
+            "exactOverlap": 0.0,
+            "nearOverlap": 1.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "sediment",
+                "method": "LEXICAL_JACCARD",
+                "value": 1.0,
+                "start": 0,
+                "end": 52,
+                "sourceStart": 0,
+                "sourceEnd": 52,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.24788746666666667,
+            "medianMs": 0.1438615,
+            "p95Ms": 0.436173,
+            "minMs": 0.113917,
+            "maxMs": 2.447422
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-eight-content-words",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 8,
+            "submittedCharacters": 67,
+            "sourceCount": 1,
+            "sourceCharacters": 67,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "sediment",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 67,
+                "sourceStart": 0,
+                "sourceEnd": 67,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.20661246666666666,
+            "medianMs": 0.177266,
+            "p95Ms": 0.434972,
+            "minMs": 0.140393,
+            "maxMs": 0.485781
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-eleven-content-words",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 11,
+            "submittedCharacters": 92,
+            "sourceCount": 1,
+            "sourceCharacters": 92,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "sediment",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 92,
+                "sourceStart": 0,
+                "sourceEnd": 92,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.2808503333333333,
+            "medianMs": 0.226823,
+            "p95Ms": 0.477947,
+            "minMs": 0.189173,
+            "maxMs": 0.661537
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-five-content-words",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 5,
+            "submittedCharacters": 44,
+            "sourceCount": 1,
+            "sourceCharacters": 44,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.08116446666666666,
+            "medianMs": 0.072784,
+            "p95Ms": 0.141957,
+            "minMs": 0.053074,
+            "maxMs": 0.154996
+          }
+        },
+        {
+          "observation": {
+            "caseId": "semantic-synonym-heavy",
+            "category": "semantic_paraphrase",
+            "cohort": "SEMANTIC_CHALLENGE",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 9,
+            "submittedCharacters": 55,
+            "sourceCount": 1,
+            "sourceCharacters": 59,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.16686246666666668,
+            "medianMs": 0.1403355,
+            "p95Ms": 0.325732,
+            "minMs": 0.115396,
+            "maxMs": 0.415424
+          }
+        },
+        {
+          "observation": {
+            "caseId": "semantic-concept-recast",
+            "category": "semantic_paraphrase",
+            "cohort": "SEMANTIC_CHALLENGE",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 12,
+            "submittedCharacters": 69,
+            "sourceCount": 1,
+            "sourceCharacters": 48,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.14075753333333332,
+            "medianMs": 0.12525,
+            "p95Ms": 0.236754,
+            "minMs": 0.102407,
+            "maxMs": 0.238816
+          }
+        },
+        {
+          "observation": {
+            "caseId": "boilerplate-rights",
+            "category": "boilerplate",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 13,
+            "submittedCharacters": 84,
+            "sourceCount": 1,
+            "sourceCharacters": 84,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3137819,
+            "medianMs": 0.1907645,
+            "p95Ms": 0.416867,
+            "minMs": 0.150283,
+            "maxMs": 3.185845
+          }
+        },
+        {
+          "observation": {
+            "caseId": "boilerplate-disclaimer",
+            "category": "boilerplate",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 14,
+            "submittedCharacters": 101,
+            "sourceCount": 1,
+            "sourceCharacters": 101,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.22301436666666666,
+            "medianMs": 0.1965205,
+            "p95Ms": 0.357755,
+            "minMs": 0.149525,
+            "maxMs": 0.396523
+          }
+        },
+        {
+          "observation": {
+            "caseId": "boilerplate-low-information",
+            "category": "boilerplate",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 16,
+            "submittedCharacters": 55,
+            "sourceCount": 1,
+            "sourceCharacters": 55,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.18596373333333333,
+            "medianMs": 0.1515335,
+            "p95Ms": 0.422461,
+            "minMs": 0.127805,
+            "maxMs": 0.454073
+          }
+        },
+        {
+          "observation": {
+            "caseId": "bibliography-shared-entry",
+            "category": "bibliography",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": true,
+            "outcome": "FP",
+            "wordCount": 28,
+            "submittedCharacters": 218,
+            "sourceCount": 1,
+            "sourceCharacters": 226,
+            "exactOverlap": 0.7142857142857143,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.7142857142857143,
+            "evidence": [
+              {
+                "sourceId": "bibliography",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 62,
+                "end": 218,
+                "sourceStart": 70,
+                "sourceEnd": 226,
+                "citationObservation": "Reference-list region detected; heuristic, not validated"
+              }
+            ],
+            "citationKinds": {
+              "REFERENCE_LIST": 1
+            },
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.734597,
+            "medianMs": 0.667904,
+            "p95Ms": 1.104402,
+            "minMs": 0.555598,
+            "maxMs": 1.153
+          }
+        },
+        {
+          "observation": {
+            "caseId": "bibliography-only",
+            "category": "bibliography",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": true,
+            "outcome": "FP",
+            "wordCount": 20,
+            "submittedCharacters": 153,
+            "sourceCount": 1,
+            "sourceCharacters": 153,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "bibliography",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 153,
+                "sourceStart": 0,
+                "sourceEnd": 153,
+                "citationObservation": "Reference-list region detected; heuristic, not validated"
+              }
+            ],
+            "citationKinds": {
+              "REFERENCE_LIST": 1
+            },
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.5888906666666667,
+            "medianMs": 0.4430845,
+            "p95Ms": 0.87633,
+            "minMs": 0.358431,
+            "maxMs": 3.255597
+          }
+        },
+        {
+          "observation": {
+            "caseId": "technical-shared-vocabulary",
+            "category": "technical",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": true,
+            "outcome": "FP",
+            "wordCount": 12,
+            "submittedCharacters": 120,
+            "sourceCount": 1,
+            "sourceCharacters": 120,
+            "exactOverlap": 0.0,
+            "nearOverlap": 1.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "database",
+                "method": "LEXICAL_JACCARD",
+                "value": 1.0,
+                "start": 0,
+                "end": 119,
+                "sourceStart": 0,
+                "sourceEnd": 119,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3193147333333333,
+            "medianMs": 0.2846085,
+            "p95Ms": 0.557486,
+            "minMs": 0.221015,
+            "maxMs": 0.574489
+          }
+        },
+        {
+          "observation": {
+            "caseId": "technical-negated-claim",
+            "category": "technical",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": true,
+            "outcome": "FP",
+            "wordCount": 18,
+            "submittedCharacters": 133,
+            "sourceCount": 1,
+            "sourceCharacters": 125,
+            "exactOverlap": 0.7222222222222222,
+            "nearOverlap": 0.2777777777777778,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "clinical",
+                "method": "LEXICAL_JACCARD",
+                "value": 0.8125,
+                "start": 0,
+                "end": 132,
+                "sourceStart": 0,
+                "sourceEnd": 124,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "clinical",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 31,
+                "end": 132,
+                "sourceStart": 23,
+                "sourceEnd": 124,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.4140041,
+            "medianMs": 0.365587,
+            "p95Ms": 0.640565,
+            "minMs": 0.290913,
+            "maxMs": 0.700804
+          }
+        },
+        {
+          "observation": {
+            "caseId": "technical-different-procedure",
+            "category": "technical",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 13,
+            "submittedCharacters": 112,
+            "sourceCount": 1,
+            "sourceCharacters": 105,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3236538333333333,
+            "medianMs": 0.259382,
+            "p95Ms": 0.666692,
+            "minMs": 0.207633,
+            "maxMs": 0.754147
+          }
+        },
+        {
+          "observation": {
+            "caseId": "unrelated-geology-music",
+            "category": "unrelated",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 17,
+            "submittedCharacters": 125,
+            "sourceCount": 1,
+            "sourceCharacters": 114,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.34886956666666663,
+            "medianMs": 0.290239,
+            "p95Ms": 0.628785,
+            "minMs": 0.217666,
+            "maxMs": 0.693921
+          }
+        },
+        {
+          "observation": {
+            "caseId": "unrelated-clinic-architecture",
+            "category": "unrelated",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 16,
+            "submittedCharacters": 123,
+            "sourceCount": 1,
+            "sourceCharacters": 107,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.32700606666666665,
+            "medianMs": 0.275061,
+            "p95Ms": 0.544297,
+            "minMs": 0.229979,
+            "maxMs": 0.580016
+          }
+        },
+        {
+          "observation": {
+            "caseId": "unrelated-identical-title",
+            "category": "unrelated",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 16,
+            "submittedCharacters": 121,
+            "sourceCount": 1,
+            "sourceCharacters": 127,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3165406666666667,
+            "medianMs": 0.268356,
+            "p95Ms": 0.521379,
+            "minMs": 0.214195,
+            "maxMs": 0.537006
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-common-fragment",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 5,
+            "submittedCharacters": 24,
+            "sourceCount": 1,
+            "sourceCharacters": 24,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.060910900000000004,
+            "medianMs": 0.050564,
+            "p95Ms": 0.119968,
+            "minMs": 0.038254,
+            "maxMs": 0.128827
+          }
+        },
+        {
+          "observation": {
+            "caseId": "boilerplate-terms",
+            "category": "boilerplate",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 16,
+            "submittedCharacters": 98,
+            "sourceCount": 1,
+            "sourceCharacters": 98,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.31022693333333334,
+            "medianMs": 0.230206,
+            "p95Ms": 0.590676,
+            "minMs": 0.188309,
+            "maxMs": 1.125679
+          }
+        },
+        {
+          "observation": {
+            "caseId": "unrelated-same-topic",
+            "category": "unrelated",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 18,
+            "submittedCharacters": 138,
+            "sourceCount": 1,
+            "sourceCharacters": 131,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3610567333333333,
+            "medianMs": 0.3170825,
+            "p95Ms": 0.627998,
+            "minMs": 0.242998,
+            "maxMs": 0.689079
+          }
+        }
+      ]
+    },
+    {
+      "profile": "REFERENCE_AWARE",
+      "metrics": {
+        "PRIMARY": {
+          "cases": 30,
+          "positives": 16,
+          "negatives": 14,
+          "tp": 14,
+          "fp": 2,
+          "tn": 12,
+          "fn": 2,
+          "precision": 0.875,
+          "recall": 0.875,
+          "f1": 0.875,
+          "falsePositiveRate": 0.14285714285714285,
+          "falseNegativeRate": 0.125
+        },
+        "SEMANTIC_CHALLENGE": {
+          "cases": 2,
+          "positives": 2,
+          "negatives": 0,
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "falsePositiveRate": null,
+          "falseNegativeRate": 1.0
+        },
+        "ALL": {
+          "cases": 32,
+          "positives": 18,
+          "negatives": 14,
+          "tp": 14,
+          "fp": 2,
+          "tn": 12,
+          "fn": 4,
+          "precision": 0.875,
+          "recall": 0.7777777777777778,
+          "f1": 0.8235294117647058,
+          "falsePositiveRate": 0.14285714285714285,
+          "falseNegativeRate": 0.2222222222222222
+        }
+      },
+      "timing": {
+        "samples": 960,
+        "meanMs": 0.37373440625,
+        "medianMs": 0.307705,
+        "p95Ms": 0.835081,
+        "minMs": 0.04095,
+        "maxMs": 5.819041
+      },
+      "measurementWindowMs": 400.037633,
+      "heap": {
+        "maxBytes": 268435456,
+        "usedBeforeBytes": 13994688,
+        "usedAfterBytes": 16254512,
+        "sampledUsedHighWaterBytes": 41370440,
+        "committedBeforeBytes": 69206016,
+        "committedAfterBytes": 69206016,
+        "gcCollections": 2,
+        "gcTimeMs": 9
+      },
+      "cases": [
+        {
+          "observation": {
+            "caseId": "exact-full",
+            "category": "exact",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 18,
+            "submittedCharacters": 145,
+            "sourceCount": 1,
+            "sourceCharacters": 145,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "weather",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 144,
+                "sourceStart": 0,
+                "sourceEnd": 144,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.45333976666666664,
+            "medianMs": 0.4038155,
+            "p95Ms": 0.760328,
+            "minMs": 0.274541,
+            "maxMs": 0.91661
+          }
+        },
+        {
+          "observation": {
+            "caseId": "exact-excerpt-distractor",
+            "category": "exact",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 33,
+            "submittedCharacters": 283,
+            "sourceCount": 2,
+            "sourceCharacters": 263,
+            "exactOverlap": 0.5151515151515151,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.5151515151515151,
+            "evidence": [
+              {
+                "sourceId": "glaciers",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 63,
+                "end": 211,
+                "sourceStart": 0,
+                "sourceEnd": 148,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.8385854333333334,
+            "medianMs": 0.743379,
+            "p95Ms": 1.357945,
+            "minMs": 0.541288,
+            "maxMs": 1.907764
+          }
+        },
+        {
+          "observation": {
+            "caseId": "exact-unicode",
+            "category": "exact",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 15,
+            "submittedCharacters": 104,
+            "sourceCount": 1,
+            "sourceCharacters": 103,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "office",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 3,
+                "end": 103,
+                "sourceStart": 0,
+                "sourceEnd": 102,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.47586836666666665,
+            "medianMs": 0.413598,
+            "p95Ms": 1.05576,
+            "minMs": 0.277799,
+            "maxMs": 1.13421
+          }
+        },
+        {
+          "observation": {
+            "caseId": "exact-two-source-identities",
+            "category": "exact",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 18,
+            "submittedCharacters": 143,
+            "sourceCount": 2,
+            "sourceCharacters": 286,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "archive-a",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 142,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "archive-b",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 142,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.6865488333333334,
+            "medianMs": 0.5706875,
+            "p95Ms": 1.575709,
+            "minMs": 0.420241,
+            "maxMs": 1.763954
+          }
+        },
+        {
+          "observation": {
+            "caseId": "minor-one-substitution",
+            "category": "minor_substitution",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 17,
+            "submittedCharacters": 139,
+            "sourceCount": 1,
+            "sourceCharacters": 141,
+            "exactOverlap": 0.6470588235294118,
+            "nearOverlap": 0.35294117647058826,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "weather",
+                "method": "LEXICAL_JACCARD",
+                "value": 0.8823529411764706,
+                "start": 0,
+                "end": 138,
+                "sourceStart": 0,
+                "sourceEnd": 140,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "weather",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 53,
+                "end": 138,
+                "sourceStart": 55,
+                "sourceEnd": 140,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.5564145666666667,
+            "medianMs": 0.3819795,
+            "p95Ms": 0.874358,
+            "minMs": 0.266348,
+            "maxMs": 4.472104
+          }
+        },
+        {
+          "observation": {
+            "caseId": "minor-two-substitutions",
+            "category": "minor_substitution",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 18,
+            "submittedCharacters": 143,
+            "sourceCount": 1,
+            "sourceCharacters": 143,
+            "exactOverlap": 0.5555555555555556,
+            "nearOverlap": 0.4444444444444444,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "seedlings",
+                "method": "LEXICAL_JACCARD",
+                "value": 0.7894736842105263,
+                "start": 0,
+                "end": 142,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "seedlings",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 68,
+                "end": 142,
+                "sourceStart": 68,
+                "sourceEnd": 142,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.6272794,
+            "medianMs": 0.3882765,
+            "p95Ms": 0.964845,
+            "minMs": 0.275765,
+            "maxMs": 5.819041
+          }
+        },
+        {
+          "observation": {
+            "caseId": "reordered-sentences",
+            "category": "reordered",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 30,
+            "submittedCharacters": 251,
+            "sourceCount": 1,
+            "sourceCharacters": 251,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "river",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 126,
+                "sourceStart": 124,
+                "sourceEnd": 250,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "river",
+                "method": "LEXICAL_JACCARD",
+                "value": 1.0,
+                "start": 0,
+                "end": 250,
+                "sourceStart": 0,
+                "sourceEnd": 250,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "river",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 128,
+                "end": 250,
+                "sourceStart": 0,
+                "sourceEnd": 122,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.8826169666666667,
+            "medianMs": 0.774053,
+            "p95Ms": 1.420535,
+            "minMs": 0.589608,
+            "maxMs": 1.619664
+          }
+        },
+        {
+          "observation": {
+            "caseId": "reordered-content-words",
+            "category": "reordered",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 13,
+            "submittedCharacters": 108,
+            "sourceCount": 1,
+            "sourceCharacters": 108,
+            "exactOverlap": 0.0,
+            "nearOverlap": 1.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "weather",
+                "method": "LEXICAL_JACCARD",
+                "value": 1.0,
+                "start": 0,
+                "end": 107,
+                "sourceStart": 0,
+                "sourceEnd": 107,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3340283,
+            "medianMs": 0.2623335,
+            "p95Ms": 0.656342,
+            "minMs": 0.210848,
+            "maxMs": 0.725029
+          }
+        },
+        {
+          "observation": {
+            "caseId": "lexical-paraphrase-passive",
+            "category": "lexical_paraphrase",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 17,
+            "submittedCharacters": 137,
+            "sourceCount": 1,
+            "sourceCharacters": 129,
+            "exactOverlap": 0.5294117647058824,
+            "nearOverlap": 0.47058823529411764,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "weather",
+                "method": "LEXICAL_JACCARD",
+                "value": 1.0,
+                "start": 0,
+                "end": 136,
+                "sourceStart": 0,
+                "sourceEnd": 128,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "weather",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 67,
+                "end": 136,
+                "sourceStart": 59,
+                "sourceEnd": 128,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.4055223333333333,
+            "medianMs": 0.3219765,
+            "p95Ms": 0.965924,
+            "minMs": 0.254313,
+            "maxMs": 0.977823
+          }
+        },
+        {
+          "observation": {
+            "caseId": "lexical-paraphrase-rephrased",
+            "category": "lexical_paraphrase",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 15,
+            "submittedCharacters": 123,
+            "sourceCount": 1,
+            "sourceCharacters": 123,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3692506,
+            "medianMs": 0.300214,
+            "p95Ms": 0.820313,
+            "minMs": 0.227637,
+            "maxMs": 0.821528
+          }
+        },
+        {
+          "observation": {
+            "caseId": "quote-with-citation",
+            "category": "quotes",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 23,
+            "submittedCharacters": 196,
+            "sourceCount": 1,
+            "sourceCharacters": 149,
+            "exactOverlap": 0.7391304347826086,
+            "nearOverlap": 0.2608695652173913,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "glaciers",
+                "method": "LEXICAL_JACCARD",
+                "value": 0.8,
+                "start": 0,
+                "end": 194,
+                "sourceStart": 0,
+                "sourceEnd": 148,
+                "citationObservation": "Nearby citation pattern detected; attribution not validated"
+              },
+              {
+                "sourceId": "glaciers",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 30,
+                "end": 178,
+                "sourceStart": 0,
+                "sourceEnd": 148,
+                "citationObservation": "Quotation and nearby citation pattern detected; attribution not validated"
+              }
+            ],
+            "citationKinds": {
+              "AUTHOR_YEAR": 1,
+              "QUOTATION": 1
+            },
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.5577119,
+            "medianMs": 0.450366,
+            "p95Ms": 1.072311,
+            "minMs": 0.366616,
+            "maxMs": 1.258994
+          }
+        },
+        {
+          "observation": {
+            "caseId": "quote-without-citation",
+            "category": "quotes",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 21,
+            "submittedCharacters": 165,
+            "sourceCount": 1,
+            "sourceCharacters": 143,
+            "exactOverlap": 0.8571428571428571,
+            "nearOverlap": 0.14285714285714285,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "seedlings",
+                "method": "LEXICAL_JACCARD",
+                "value": 0.8947368421052632,
+                "start": 0,
+                "end": 163,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "seedlings",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 21,
+                "end": 163,
+                "sourceStart": 0,
+                "sourceEnd": 142,
+                "citationObservation": "Quotation detected; attribution not validated"
+              }
+            ],
+            "citationKinds": {
+              "QUOTATION": 1
+            },
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.4976337,
+            "medianMs": 0.396885,
+            "p95Ms": 1.078608,
+            "minMs": 0.307634,
+            "maxMs": 1.202583
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-six-content-words",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 6,
+            "submittedCharacters": 52,
+            "sourceCount": 1,
+            "sourceCharacters": 52,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "sediment",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 52,
+                "sourceStart": 0,
+                "sourceEnd": 52,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.2061461,
+            "medianMs": 0.162615,
+            "p95Ms": 0.50606,
+            "minMs": 0.116912,
+            "maxMs": 0.587428
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-eight-content-words",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 8,
+            "submittedCharacters": 67,
+            "sourceCount": 1,
+            "sourceCharacters": 67,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "sediment",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 67,
+                "sourceStart": 0,
+                "sourceEnd": 67,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.24142516666666666,
+            "medianMs": 0.1900325,
+            "p95Ms": 0.559809,
+            "minMs": 0.136038,
+            "maxMs": 0.750672
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-eleven-content-words",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": true,
+            "outcome": "TP",
+            "wordCount": 11,
+            "submittedCharacters": 92,
+            "sourceCount": 1,
+            "sourceCharacters": 92,
+            "exactOverlap": 1.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "sediment",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 0,
+                "end": 92,
+                "sourceStart": 0,
+                "sourceEnd": 92,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.2860068333333333,
+            "medianMs": 0.237538,
+            "p95Ms": 0.607941,
+            "minMs": 0.178005,
+            "maxMs": 0.746661
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-five-content-words",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 5,
+            "submittedCharacters": 44,
+            "sourceCount": 1,
+            "sourceCharacters": 44,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.0765492,
+            "medianMs": 0.065701,
+            "p95Ms": 0.156609,
+            "minMs": 0.056548,
+            "maxMs": 0.168269
+          }
+        },
+        {
+          "observation": {
+            "caseId": "semantic-synonym-heavy",
+            "category": "semantic_paraphrase",
+            "cohort": "SEMANTIC_CHALLENGE",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 9,
+            "submittedCharacters": 55,
+            "sourceCount": 1,
+            "sourceCharacters": 59,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.1698869,
+            "medianMs": 0.1563735,
+            "p95Ms": 0.310852,
+            "minMs": 0.112795,
+            "maxMs": 0.348959
+          }
+        },
+        {
+          "observation": {
+            "caseId": "semantic-concept-recast",
+            "category": "semantic_paraphrase",
+            "cohort": "SEMANTIC_CHALLENGE",
+            "label": "POSITIVE",
+            "predicted": false,
+            "outcome": "FN",
+            "wordCount": 12,
+            "submittedCharacters": 69,
+            "sourceCount": 1,
+            "sourceCharacters": 48,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.16145820000000002,
+            "medianMs": 0.130494,
+            "p95Ms": 0.282012,
+            "minMs": 0.102117,
+            "maxMs": 0.370479
+          }
+        },
+        {
+          "observation": {
+            "caseId": "boilerplate-rights",
+            "category": "boilerplate",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 13,
+            "submittedCharacters": 84,
+            "sourceCount": 1,
+            "sourceCharacters": 84,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.28433603333333335,
+            "medianMs": 0.2211705,
+            "p95Ms": 0.443265,
+            "minMs": 0.168617,
+            "maxMs": 1.332663
+          }
+        },
+        {
+          "observation": {
+            "caseId": "boilerplate-disclaimer",
+            "category": "boilerplate",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 14,
+            "submittedCharacters": 101,
+            "sourceCount": 1,
+            "sourceCharacters": 101,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.2960183,
+            "medianMs": 0.2293605,
+            "p95Ms": 0.5722,
+            "minMs": 0.177621,
+            "maxMs": 1.117512
+          }
+        },
+        {
+          "observation": {
+            "caseId": "boilerplate-low-information",
+            "category": "boilerplate",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 16,
+            "submittedCharacters": 55,
+            "sourceCount": 1,
+            "sourceCharacters": 55,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.18350773333333334,
+            "medianMs": 0.1507195,
+            "p95Ms": 0.341276,
+            "minMs": 0.116153,
+            "maxMs": 0.548192
+          }
+        },
+        {
+          "observation": {
+            "caseId": "bibliography-shared-entry",
+            "category": "bibliography",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 28,
+            "submittedCharacters": 218,
+            "sourceCount": 1,
+            "sourceCharacters": 226,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {
+              "REFERENCE_LIST": 1
+            },
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.4344608333333333,
+            "medianMs": 0.390528,
+            "p95Ms": 0.763927,
+            "minMs": 0.296453,
+            "maxMs": 0.789124
+          }
+        },
+        {
+          "observation": {
+            "caseId": "bibliography-only",
+            "category": "bibliography",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 20,
+            "submittedCharacters": 153,
+            "sourceCount": 1,
+            "sourceCharacters": 153,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {
+              "REFERENCE_LIST": 1
+            },
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.2530961333333333,
+            "medianMs": 0.223039,
+            "p95Ms": 0.409991,
+            "minMs": 0.179,
+            "maxMs": 0.424657
+          }
+        },
+        {
+          "observation": {
+            "caseId": "technical-shared-vocabulary",
+            "category": "technical",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": true,
+            "outcome": "FP",
+            "wordCount": 12,
+            "submittedCharacters": 120,
+            "sourceCount": 1,
+            "sourceCharacters": 120,
+            "exactOverlap": 0.0,
+            "nearOverlap": 1.0,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "database",
+                "method": "LEXICAL_JACCARD",
+                "value": 1.0,
+                "start": 0,
+                "end": 119,
+                "sourceStart": 0,
+                "sourceEnd": 119,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3362268666666666,
+            "medianMs": 0.326867,
+            "p95Ms": 0.625823,
+            "minMs": 0.204923,
+            "maxMs": 0.645956
+          }
+        },
+        {
+          "observation": {
+            "caseId": "technical-negated-claim",
+            "category": "technical",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": true,
+            "outcome": "FP",
+            "wordCount": 18,
+            "submittedCharacters": 133,
+            "sourceCount": 1,
+            "sourceCharacters": 125,
+            "exactOverlap": 0.7222222222222222,
+            "nearOverlap": 0.2777777777777778,
+            "totalOverlap": 1.0,
+            "evidence": [
+              {
+                "sourceId": "clinical",
+                "method": "LEXICAL_JACCARD",
+                "value": 0.8125,
+                "start": 0,
+                "end": 132,
+                "sourceStart": 0,
+                "sourceEnd": 124,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              },
+              {
+                "sourceId": "clinical",
+                "method": "EXACT",
+                "value": 1.0,
+                "start": 31,
+                "end": 132,
+                "sourceStart": 23,
+                "sourceEnd": 124,
+                "citationObservation": "No nearby citation pattern detected; absence is uncertain"
+              }
+            ],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.4029915,
+            "medianMs": 0.400398,
+            "p95Ms": 0.617707,
+            "minMs": 0.254957,
+            "maxMs": 0.643922
+          }
+        },
+        {
+          "observation": {
+            "caseId": "technical-different-procedure",
+            "category": "technical",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 13,
+            "submittedCharacters": 112,
+            "sourceCount": 1,
+            "sourceCharacters": 105,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3093825333333333,
+            "medianMs": 0.2696245,
+            "p95Ms": 0.477405,
+            "minMs": 0.196459,
+            "maxMs": 0.512432
+          }
+        },
+        {
+          "observation": {
+            "caseId": "unrelated-geology-music",
+            "category": "unrelated",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 17,
+            "submittedCharacters": 125,
+            "sourceCount": 1,
+            "sourceCharacters": 114,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.30812303333333335,
+            "medianMs": 0.2700365,
+            "p95Ms": 0.538953,
+            "minMs": 0.208594,
+            "maxMs": 0.627837
+          }
+        },
+        {
+          "observation": {
+            "caseId": "unrelated-clinic-architecture",
+            "category": "unrelated",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 16,
+            "submittedCharacters": 123,
+            "sourceCount": 1,
+            "sourceCharacters": 107,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.3276386,
+            "medianMs": 0.2890815,
+            "p95Ms": 0.509511,
+            "minMs": 0.205396,
+            "maxMs": 0.96597
+          }
+        },
+        {
+          "observation": {
+            "caseId": "unrelated-identical-title",
+            "category": "unrelated",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 16,
+            "submittedCharacters": 121,
+            "sourceCount": 1,
+            "sourceCharacters": 127,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.30454976666666667,
+            "medianMs": 0.2804415,
+            "p95Ms": 0.48042,
+            "minMs": 0.204648,
+            "maxMs": 0.707406
+          }
+        },
+        {
+          "observation": {
+            "caseId": "short-common-fragment",
+            "category": "short",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 5,
+            "submittedCharacters": 24,
+            "sourceCount": 1,
+            "sourceCharacters": 24,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.0635109,
+            "medianMs": 0.053337,
+            "p95Ms": 0.149778,
+            "minMs": 0.04095,
+            "maxMs": 0.164412
+          }
+        },
+        {
+          "observation": {
+            "caseId": "boilerplate-terms",
+            "category": "boilerplate",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 16,
+            "submittedCharacters": 98,
+            "sourceCount": 1,
+            "sourceCharacters": 98,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.28248513333333336,
+            "medianMs": 0.243617,
+            "p95Ms": 0.501918,
+            "minMs": 0.194885,
+            "maxMs": 0.639369
+          }
+        },
+        {
+          "observation": {
+            "caseId": "unrelated-same-topic",
+            "category": "unrelated",
+            "cohort": "PRIMARY",
+            "label": "NEGATIVE",
+            "predicted": false,
+            "outcome": "TN",
+            "wordCount": 18,
+            "submittedCharacters": 138,
+            "sourceCount": 1,
+            "sourceCharacters": 131,
+            "exactOverlap": 0.0,
+            "nearOverlap": 0.0,
+            "totalOverlap": 0.0,
+            "evidence": [],
+            "citationKinds": {},
+            "semanticStatus": "NOT_IMPLEMENTED",
+            "aiWritingStatus": "NOT_IMPLEMENTED"
+          },
+          "timing": {
+            "samples": 30,
+            "meanMs": 0.34690106666666665,
+            "medianMs": 0.302041,
+            "p95Ms": 0.625022,
+            "minMs": 0.223267,
+            "maxMs": 0.770803
+          }
+        }
+      ]
+    }
+  ]
+}

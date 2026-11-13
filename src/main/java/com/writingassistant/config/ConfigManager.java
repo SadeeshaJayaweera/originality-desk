@@ -9,6 +9,12 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.LinkOption;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.*;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -96,14 +102,19 @@ public class ConfigManager {
      */
     public synchronized void loadConfig() {
         if (Files.exists(configFile)) {
-            try (Reader reader = Files.newBufferedReader(configFile)) {
-                this.config = GSON.fromJson(reader, AppConfig.class);
-                if (this.config == null) {
-                    this.config = new AppConfig();
+            try {
+                restrictConfigPermissions(configFile);
+                try (Reader reader = Files.newBufferedReader(configFile)) {
+                    this.config = GSON.fromJson(reader, AppConfig.class);
+                    if (this.config == null) {
+                        this.config = new AppConfig();
+                    }
                 }
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Error reading config file from " + configFile + ". Using defaults.", e);
+                // Parser exceptions can quote configuration values, including the API key.
+                LOGGER.warning("Could not securely read configuration at " + configFile + ". Using offline defaults.");
                 this.config = new AppConfig();
+                this.config.setOfflineMode(true);
             }
         } else {
             this.config = new AppConfig();
@@ -115,14 +126,57 @@ public class ConfigManager {
      * Persists the current configuration to config.json.
      */
     public synchronized void saveConfig() {
+        Path temporaryFile = null;
         try {
             ensureAppDataDirectoryExists();
-            try (Writer writer = Files.newBufferedWriter(configFile)) {
+            if (Files.isSymbolicLink(configFile)) {
+                throw new IOException("Configuration file must not be a symbolic link.");
+            }
+            if (Files.getFileStore(appDataDir).supportsFileAttributeView("posix")) {
+                temporaryFile = Files.createTempFile(appDataDir, ".config-", ".tmp",
+                        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+            } else {
+                temporaryFile = Files.createTempFile(appDataDir, ".config-", ".tmp");
+            }
+            restrictConfigPermissions(temporaryFile);
+            try (Writer writer = Files.newBufferedWriter(temporaryFile)) {
                 GSON.toJson(config, writer);
             }
+            try {
+                Files.move(temporaryFile, configFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temporaryFile, configFile, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Failed to write config file to " + configFile, e);
+            throw new IllegalStateException("Cannot securely save configuration at " + configFile
+                    + ". Check directory permissions and owner-only file permission support.", e);
+        } finally {
+            if (temporaryFile != null) {
+                try {
+                    Files.deleteIfExists(temporaryFile);
+                } catch (IOException e) {
+                    LOGGER.warning("Could not remove temporary configuration file.");
+                }
+            }
         }
+    }
+
+    private static void restrictConfigPermissions(Path path) throws IOException {
+        if (Files.isSymbolicLink(path)) {
+            throw new IOException("Configuration file must not be a symbolic link.");
+        }
+        PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
+        if (posix != null) {
+            posix.setPermissions(PosixFilePermissions.fromString("rw-------"));
+            return;
+        }
+        AclFileAttributeView acl = Files.getFileAttributeView(path, AclFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
+        if (acl != null) {
+            acl.setAcl(List.of(AclEntry.newBuilder().setType(AclEntryType.ALLOW)
+                    .setPrincipal(acl.getOwner()).setPermissions(Set.of(AclEntryPermission.values())).build()));
+            return;
+        }
+        throw new IOException("Owner-only permissions are not supported by this filesystem.");
     }
 
     /**
@@ -131,6 +185,9 @@ public class ConfigManager {
      * @return the API key or null if not configured
      */
     public String getEffectiveApiKey() {
+        if (config != null && config.isOfflineMode()) {
+            return null;
+        }
         if (config != null && config.getGeminiApiKey() != null && !config.getGeminiApiKey().isBlank()) {
             return config.getGeminiApiKey().trim();
         }
@@ -153,6 +210,10 @@ public class ConfigManager {
      * Explains why AI features are unavailable and clarifies that offline similarity checking remains active.
      */
     public String getAiUnavailableReason() {
+        if (config != null && config.isOfflineMode()) {
+            return "Offline mode is enabled. Disable it in Settings to use Gemini. "
+                    + "Offline similarity checking and local citation tools remain fully functional.";
+        }
         if (isAiAvailable()) {
             return null;
         }

@@ -8,7 +8,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Level;
+import java.sql.ResultSet;
+import java.util.Locale;
+
 import java.util.logging.Logger;
 
 /**
@@ -49,7 +51,23 @@ public class DatabaseManager {
      * Obtains a new connection to the SQLite database.
      */
     public Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(jdbcUrl);
+        Connection conn = DriverManager.getConnection(jdbcUrl);
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("PRAGMA foreign_keys = ON");
+            try (ResultSet rs = stmt.executeQuery("PRAGMA foreign_keys")) {
+                if (!rs.next() || rs.getInt(1) != 1) {
+                    throw new SQLException("SQLite foreign key enforcement could not be enabled.");
+                }
+            }
+            return conn;
+        } catch (SQLException e) {
+            try {
+                conn.close();
+            } catch (SQLException closeError) {
+                e.addSuppressed(closeError);
+            }
+            throw e;
+        }
     }
 
     /**
@@ -124,34 +142,48 @@ public class DatabaseManager {
 
         try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute("PRAGMA journal_mode = WAL;");
-            stmt.execute("PRAGMA foreign_keys = ON;");
-            stmt.execute(createDocumentsTable);
-            stmt.execute(createCitationLibraryTable);
-            stmt.execute(createCitationsTable);
-            stmt.execute(createDocumentCitationsTable);
-            stmt.execute(createHistoryTable);
+            conn.setAutoCommit(false);
+            try {
+                stmt.execute(createDocumentsTable);
+                stmt.execute(createCitationLibraryTable);
+                stmt.execute(createCitationsTable);
+                stmt.execute(createDocumentCitationsTable);
+                stmt.execute(createHistoryTable);
 
-            // Safe column additions for backward compatibility / upgrades
-            tryAddColumn(stmt, "documents", "last_opened", "INTEGER");
-            tryAddColumn(stmt, "documents", "created_at", "INTEGER");
-            tryAddColumn(stmt, "citations", "source_type", "TEXT");
-            tryAddColumn(stmt, "citations", "volume", "TEXT");
-            tryAddColumn(stmt, "citations", "issue", "TEXT");
-            tryAddColumn(stmt, "citations", "original_quote", "TEXT");
-            tryAddColumn(stmt, "rewrite_history", "document_id", "TEXT");
-            tryAddColumn(stmt, "rewrite_history", "chosen_alternative", "TEXT");
+                // Safe column additions for backward compatibility / upgrades
+                tryAddColumn(stmt, "documents", "last_opened", "INTEGER");
+                tryAddColumn(stmt, "documents", "created_at", "INTEGER");
+                tryAddColumn(stmt, "citations", "source_type", "TEXT");
+                tryAddColumn(stmt, "citations", "volume", "TEXT");
+                tryAddColumn(stmt, "citations", "issue", "TEXT");
+                tryAddColumn(stmt, "citations", "original_quote", "TEXT");
+                tryAddColumn(stmt, "rewrite_history", "document_id", "TEXT");
+                tryAddColumn(stmt, "rewrite_history", "chosen_alternative", "TEXT");
 
+                conn.commit();
+            } catch (SQLException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
+            }
             LOGGER.info("Database schema initialized successfully with URL: " + jdbcUrl);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Failed to initialize SQLite database schema: " + e.getMessage(), e);
+            throw new IllegalStateException("Cannot initialize SQLite database at " + jdbcUrl
+                    + ". Check directory permissions, available disk space, and schema compatibility before restarting.", e);
         }
     }
 
-    private void tryAddColumn(Statement stmt, String table, String column, String type) {
+    private void tryAddColumn(Statement stmt, String table, String column, String type) throws SQLException {
         try {
             stmt.execute("ALTER TABLE " + table + " ADD COLUMN " + column + " " + type + ";");
-        } catch (SQLException ignored) {
-            // Column already exists, safe to ignore
+        } catch (SQLException e) {
+            if (e.getErrorCode() != 1 || e.getMessage() == null
+                    || !e.getMessage().toLowerCase(Locale.ROOT).contains("duplicate column name: " + column)) {
+                throw e;
+            }
         }
     }
 

@@ -1,0 +1,1726 @@
+openapi: 3.0.3
+info:
+  title: Originality Desk standalone HTTP API
+  version: '1'
+  description: |
+    Implemented single-host local-evidence service, not the desktop database API.
+    Examples are illustrative fixtures, not live measurements or misconduct findings.
+    One analysis compares one extracted document with at most 50 local source documents.
+    There is no multi-submission batch, collaboration, invitation, user/role-management,
+    original-file-download, hosted AI, web search, semantic analysis, OCR, or authorship API.
+    This file is documentation; it is not served by an /openapi.json endpoint.
+
+    Every request, including public probes/assets, requires Host equal (case-insensitively)
+    to DESK_PUBLIC_ORIGIN's authority, including any explicit port. API mutations require
+    an Origin exactly equal to DESK_PUBLIC_ORIGIN. API GET may omit Origin; if present it
+    must match. If Sec-Fetch-Site is supplied on an API request, only same-origin or none
+    is accepted, not same-site. No CORS, preflight API, Referer fallback, or separate CSRF
+    token is implemented. JSON POSTs require application/json, including empty logout
+    and cancel requests. DELETE has no body requirement. CLI clients must supply Origin.
+
+    Cookie authentication is workspace-scoped. Unknown and other-workspace resource IDs
+    return 404 after applicable auth/role checks. Role and workspace cannot be selected
+    in request bodies. Unknown JSON fields generally are ignored. JSON must be strict
+    UTF-8, one object, at most 16384 bytes, nesting at most ten, without duplicate keys.
+    Non-identity Content-Encoding is rejected. String validation uses Java UTF-16 length.
+    Query duplicates are rejected; unknown query names do not implement extra filters.
+
+    Application responses use Cache-Control no-store, nosniff, frame denial, no-referrer,
+    same-origin resource policy and restrictive CSP. Reports additionally have attachment
+    disposition and sandbox CSP. Application errors use ErrorResponse; JDK parser errors,
+    overload, oversized-body send races and disconnects may terminate the connection
+    without that envelope. Health readiness has its own small 503 DOWN response.
+
+    Fixed per-process minute limits: 600 requests/socket peer IP; 15 combined register/login
+    attempts/peer IP; 360 authenticated requests/user; 30 uploads/user; 30 analysis POSTs/user
+    including replays; 60 report/export GETs/user. The limiter has at most 4096 active keys.
+    X-Forwarded-For, Forwarded and X-Real-IP are not trusted. Behind a proxy users share its
+    peer-IP bucket. 429 includes Retry-After 60 even for persistent quotas; this is advisory.
+    See API.md for storage budgets, state transitions and unresolved operational limitations.
+servers:
+  - url: http://localhost:8080
+    description: Default canonical public origin; replace with configured DESK_PUBLIC_ORIGIN.
+security:
+  - SessionCookie: []
+tags:
+  - name: Authentication
+  - name: Dashboard
+  - name: Documents
+  - name: Analyses
+  - name: Reviews
+  - name: Reports
+  - name: Administration
+  - name: Health
+  - name: Static assets
+paths:
+  /api/v1/auth/register:
+    post:
+      tags: [Authentication]
+      operationId: register
+      summary: Create a new user and separate workspace
+      description: |
+        Always creates INSTITUTION_ADMIN, never joins an existing workspace. Caller role
+        fields cannot grant other capabilities. Name/workspace name are stripped; email
+        is stripped, lowercased, globally unique and not email-verified. Password is not
+        trimmed and must be nonblank, NUL-free, 12..1024 UTF-16 units. Sets a new session.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              name: Alex Reviewer
+              email: alex@example.test
+              password: a long example password
+              workspaceName: Alex workspace
+      responses:
+        '201':
+          description: Identity of the new workspace administrator; session cookie set.
+          headers:
+            Set-Cookie:
+              $ref: '#/components/headers/SessionCookie'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+              examples:
+                identity:
+                  $ref: '#/components/examples/Identity'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: CONFLICT, registration cannot be completed with that email.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/auth/login:
+    post:
+      tags: [Authentication]
+      operationId: login
+      summary: Authenticate and create an absolute-expiry session
+      description: |
+        Unknown email and incorrect password both return INVALID_CREDENTIALS. Email is
+        normalized as for registration. Password is a nonblank NUL-free string up to 1024
+        UTF-16 units. Does not change role/workspace or revoke all previous sessions.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: alex@example.test
+              password: a long example password
+      responses:
+        '200':
+          description: Authenticated identity; new session cookie set.
+          headers:
+            Set-Cookie:
+              $ref: '#/components/headers/SessionCookie'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+              examples:
+                identity:
+                  $ref: '#/components/examples/Identity'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: INVALID_CREDENTIALS; same public message for unknown user and wrong password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: {code: INVALID_CREDENTIALS, message: Invalid email or password}
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/auth/me:
+    get:
+      tags: [Authentication]
+      operationId: getIdentity
+      summary: Get current user and workspace
+      responses:
+        '200':
+          description: Current session's identity, without password or session hash.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+              examples:
+                identity:
+                  $ref: '#/components/examples/Identity'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/auth/logout:
+    post:
+      tags: [Authentication]
+      operationId: logout
+      summary: Revoke this session only
+      description: |
+        Send application/json and {}. Zero-length body is also accepted, but the JSON
+        Content-Type header is still mandatory. Expired/revoked sessions return 401.
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+      requestBody:
+        $ref: '#/components/requestBodies/EmptyJson'
+      responses:
+        '204':
+          description: Session revoked; no response body.
+          headers:
+            Set-Cookie:
+              description: Clears desk_session at Path=/ with HttpOnly, SameSite=Strict, Max-Age=0 and configured Secure flag.
+              schema:
+                type: string
+              example: 'desk_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/dashboard:
+    get:
+      tags: [Dashboard]
+      operationId: getDashboard
+      summary: Get actual workspace counts and recent metadata
+      description: |
+        Pending counts QUEUED/RUNNING analyses, not extraction jobs. Failed excludes CANCELLED.
+        storageBytes sums original document bytes only, not total disk/database use. Recent
+        arrays have at most ten entries each; activity has at most twenty retained actions.
+      responses:
+        '200':
+          description: Workspace dashboard.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+              example:
+                totalDocuments: 0
+                completedAnalyses: 0
+                pendingAnalyses: 0
+                failedAnalyses: 0
+                storageBytes: 0
+                recentDocuments: []
+                recentAnalyses: []
+                activity: []
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/documents:
+    get:
+      tags: [Documents]
+      operationId: listDocuments
+      summary: Page this workspace's documents
+      description: Ordered by createdAt descending, then id descending. No search or status filter.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: kind
+          in: query
+          description: Omit to include both document kinds.
+          schema:
+            $ref: '#/components/schemas/DocumentKind'
+      responses:
+        '200':
+          description: Document page; a valid page beyond the end has empty items.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentPage'
+              examples:
+                empty:
+                  $ref: '#/components/examples/EmptyPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+    post:
+      tags: [Documents]
+      operationId: uploadDocument
+      summary: Upload one raw document and persist an extraction job
+      description: |
+        Nonempty raw file body, at most 10485760 bytes; not multipart or base64 JSON.
+        Filename extension, MIME and content/signature must agree. Use octet-stream for
+        any supported extension; omitted Content-Type is treated as octet-stream. Only
+        UTF-8 TXT, PDF and DOCX are supported. Random physical paths, never client paths.
+        201 means EXTRACTING, not successful parsing; poll GET by ID until READY/FAILED.
+        Extracted text is capped at 200000 UTF-16 units; empty text fails. Additional PDF
+        and DOCX parser/archive budgets can fail asynchronously after header validation.
+        Quotas: 2000 documents/256 MiB original bytes per workspace; 10000/2 GiB globally.
+        Combined pending extraction/analysis jobs are capped at 100/workspace, 200 globally.
+        Same original bytes in the same workspace and kind return 409, not another 201.
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+        - name: filename
+          in: query
+          required: true
+          description: URL-encoded nonblank filename, no slash/backslash/control characters, not . or ..; title equals this value.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+          example: reference one.txt
+        - name: kind
+          in: query
+          schema:
+            type: string
+            enum: [REFERENCE, SUBMISSION]
+            default: SUBMISSION
+      requestBody:
+        required: true
+        description: Raw original bytes. Binary body byte limit is enforced independently of Content-Length, including chunked requests.
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              x-maxBytes: 10485760
+          text/plain:
+            schema:
+              type: string
+              format: binary
+              x-maxBytes: 10485760
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+              x-maxBytes: 10485760
+          application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+            schema:
+              type: string
+              format: binary
+              x-maxBytes: 10485760
+      responses:
+        '201':
+          description: Newly stored document in EXTRACTING state, zero extraction counts, error null.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+              examples:
+                extracting:
+                  $ref: '#/components/examples/ExtractingDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: DUPLICATE_DOCUMENT, original bytes already exist in this workspace and kind.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: {code: DUPLICATE_DOCUMENT, message: This document already exists in this workspace and kind}
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/documents/{documentId}:
+    parameters:
+      - $ref: '#/components/parameters/DocumentId'
+    get:
+      tags: [Documents]
+      operationId: getDocument
+      summary: Get metadata and persisted extraction state
+      description: Does not return original bytes, extracted text, storage name, or content hash.
+      responses:
+        '200':
+          description: Document metadata; status is EXTRACTING, READY or FAILED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+              examples:
+                extracting:
+                  $ref: '#/components/examples/ExtractingDocument'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+    delete:
+      tags: [Documents]
+      operationId: deleteDocument
+      summary: Delete the document and all dependent analysis data
+      description: |
+        Removes blob/text/extraction job and every analysis where this document is the
+        submission OR a source, including whole snapshots, reviews and analysis jobs.
+        Source passages are not kept in dependent reports. A running job cannot republish
+        after deletion. A text-free audit action remains. Repeated deletion returns 404.
+        Unlink and SQLite commit are not one atomic filesystem transaction. Failure/crash
+        can require operator inspection. No certified physical erasure, backup deletion,
+        download revocation or immediate clearing of transient computation memory is promised.
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+      responses:
+        '204':
+          description: Deleted, no response body.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/analyses:
+    get:
+      tags: [Analyses]
+      operationId: listAnalyses
+      summary: Page analysis metadata in this workspace
+      description: Ordered by createdAt descending, then id descending. Items never include result. No status/profile filter.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Analysis metadata page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisPage'
+              examples:
+                empty:
+                  $ref: '#/components/examples/EmptyPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+    post:
+      tags: [Analyses]
+      operationId: createAnalysis
+      summary: Persist one analysis job, optionally with an idempotency key
+      description: |
+        Submission and every source must be READY and in the session's workspace. Explicit
+        sources may have either kind. Self-source is rejected; duplicate IDs are deduplicated.
+        Omitted sourceIds selects currently ready REFERENCE documents only, excluding self;
+        more than 50 eligible references rejects instead of truncating. [] explicitly uses
+        no sources; null is invalid. Each text is at most 200000 UTF-16 units and source
+        corpus at most 1000000. Preflight SQL counts code points, so supplementary-character
+        corpora may pass admission and fail the engine UTF-16 limit asynchronously.
+
+        Idempotency-Key is workspace-scoped, 1..128 printable ASCII non-space characters.
+        Equal canonical input replays the same ID with 202 even when terminal; a completed
+        replay may include result. Source ordering/duplicates are canonicalized. Omission
+        differs from an explicit list; omitted-source replay does not reselect references.
+        Different input with a retained key returns 409. Document deletion can delete the
+        analysis/key; there is no permanent ledger. Replay still uses rate-limit allowance.
+        Quotas: 2000 analyses/workspace, 20000 globally; pending jobs 100/workspace, 200 global.
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+            pattern: '^[!-~]+$'
+          example: submission-one-standard-v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAnalysisRequest'
+            examples:
+              explicitSources:
+                value:
+                  documentId: 30000000-0000-4000-8000-000000000002
+                  sourceIds: [30000000-0000-4000-8000-000000000001]
+                  profile: STANDARD
+              automaticReferences:
+                value:
+                  documentId: 30000000-0000-4000-8000-000000000002
+                  profile: REFERENCE_AWARE
+              noSources:
+                value:
+                  documentId: 30000000-0000-4000-8000-000000000002
+                  sourceIds: []
+                  profile: QUICK
+      responses:
+        '202':
+          description: Newly queued metadata or retained analysis on replay; not a promise of successful completion.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisDetail'
+              examples:
+                queued:
+                  $ref: '#/components/examples/QueuedAnalysis'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/analyses/{analysisId}:
+    parameters:
+      - $ref: '#/components/parameters/AnalysisId'
+    get:
+      tags: [Analyses]
+      operationId: getAnalysis
+      summary: Get analysis state and optional stored engine result
+      description: |
+        Includes result only when a stored result exists. It is the nested engine result,
+        not the report wrapper; documentText is available from reports, not this endpoint.
+        There is no simulated progress or percentage. A retry can return RUNNING to QUEUED.
+      responses:
+        '200':
+          description: Analysis detail, including terminal failure/cancellation as ordinary resource state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisDetail'
+              examples:
+                queued:
+                  $ref: '#/components/examples/QueuedAnalysis'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/analyses/{analysisId}/status:
+    parameters:
+      - $ref: '#/components/parameters/AnalysisId'
+    get:
+      tags: [Analyses]
+      operationId: getAnalysisStatus
+      summary: Poll persisted metadata without result
+      responses:
+        '200':
+          $ref: '#/components/responses/AnalysisMetadata'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/analyses/{analysisId}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/AnalysisId'
+    post:
+      tags: [Analyses]
+      operationId: cancelAnalysis
+      summary: Cancel queued/running work and prohibit late publication
+      description: |
+        Send application/json and {} (or zero body with that same Content-Type). Returns
+        metadata without result. Already terminal analyses are a 200 no-op; completion may
+        win a race with cancellation. Requests interruption, not forced JVM termination.
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+      requestBody:
+        $ref: '#/components/requestBodies/EmptyJson'
+      responses:
+        '200':
+          $ref: '#/components/responses/AnalysisMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/analyses/{analysisId}/reviews:
+    parameters:
+      - $ref: '#/components/parameters/AnalysisId'
+    get:
+      tags: [Reviews]
+      operationId: listReviews
+      summary: Page separate reviewer annotations
+      description: |
+        REVIEWER or INSTITUTION_ADMIN required. Oldest first (createdAt ASC, id ASC).
+        Does not modify/merge notes into immutable result. Existing non-completed analysis
+        may return an empty page. Page to obtain more than the default twenty records.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Review page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewPage'
+              examples:
+                empty:
+                  $ref: '#/components/examples/EmptyPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+    post:
+      tags: [Reviews]
+      operationId: appendReview
+      summary: Append a decision and note for a stored evidence match
+      description: |
+        REVIEWER or INSTITUTION_ADMIN required. Analysis must be COMPLETED and matchIndex
+        must exist in immutable result.matches. Appends, does not replace earlier reviews
+        or scores. Decision is an uppercase/underscore string, not a server enum. Conventional
+        UI values are NEEDS_REVIEW, ACCEPTED, FLAGGED, DISMISSED. Note may be empty, must be
+        NUL-free and <=4000 UTF-16 units. Limit 1000 notes/analysis and 10000/workspace.
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+            example:
+              matchIndex: 0
+              decision: NEEDS_REVIEW
+              note: Check the attribution in context.
+      responses:
+        '201':
+          description: Appended review, independent of report snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+              examples:
+                review:
+                  $ref: '#/components/examples/Review'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/reports/{analysisId}:
+    parameters:
+      - $ref: '#/components/parameters/AnalysisId'
+    get:
+      tags: [Reports]
+      operationId: getReport
+      summary: Get the immutable JSON report wrapper
+      description: |
+        Same snapshot as /json, including original extracted submitted documentText and
+        nested engine result. Never reruns analysis. Only available after COMPLETED.
+        Reviews are separate and are not included. Deleting submission or any source
+        deletes this report. All exports are attachments, no-store, sandboxed by CSP.
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonReport'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/reports/{analysisId}/json:
+    parameters:
+      - $ref: '#/components/parameters/AnalysisId'
+    get:
+      tags: [Reports]
+      operationId: exportJsonReport
+      summary: Download the same immutable JSON report snapshot
+      description: No algorithm rerun, no merged reviewer notes. Same object as the unsuffixed report route.
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonReport'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/reports/{analysisId}/html:
+    parameters:
+      - $ref: '#/components/parameters/AnalysisId'
+    get:
+      tags: [Reports]
+      operationId: exportHtmlReport
+      summary: Download an escaped HTML rendering of the stored snapshot
+      description: User/source text is HTML-escaped; no algorithm rerun and no subsequent reviewer notes.
+      responses:
+        '200':
+          description: HTML attachment, no-store and sandbox CSP.
+          headers:
+            Content-Disposition:
+              description: Fixed HTML attachment filename.
+              schema: {type: string}
+              example: 'attachment; filename="report.html"'
+          content:
+            text/html:
+              schema: {type: string}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/reports/{analysisId}/csv:
+    parameters:
+      - $ref: '#/components/parameters/AnalysisId'
+    get:
+      tags: [Reports]
+      operationId: exportCsvReport
+      summary: Download a spreadsheet-safe match table
+      description: |
+        CSV is not the full JSON snapshot. All cells are quoted, embedded quotes doubled,
+        records CRLF-separated, potentially executable cells apostrophe-prefixed. Headers:
+        sourceId,sourceTitle,sourceType,method,value,submittedPassage,sourcePassage,start,end,
+        citationObservation. No algorithm rerun, documentText or reviewer notes.
+      responses:
+        '200':
+          description: CSV attachment, no-store and sandbox CSP. Use JSON for unmodified evidence strings.
+          headers:
+            Content-Disposition:
+              description: Fixed CSV attachment filename.
+              schema: {type: string}
+              example: 'attachment; filename="report.csv"'
+          content:
+            text/csv:
+              schema: {type: string}
+              example: '"sourceId","sourceTitle","sourceType","method","value","submittedPassage","sourcePassage","start","end","citationObservation"'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/reports/{analysisId}/pdf:
+    parameters:
+      - $ref: '#/components/parameters/AnalysisId'
+    get:
+      tags: [Reports]
+      operationId: exportPdfReport
+      summary: Download a real PDFBox-generated report from the snapshot
+      description: |
+        Basic report layout, not a reproduction of the original document. Standard-font
+        unsupported glyphs are replaced with ?; JSON/HTML retain original Unicode. At most
+        20000 prepared lines and two concurrent PDF renders. No analysis rerun/reviewer notes.
+      responses:
+        '200':
+          description: PDF attachment, no-store and sandbox CSP.
+          headers:
+            Content-Disposition:
+              description: Fixed PDF attachment filename.
+              schema: {type: string}
+              example: 'attachment; filename="report.pdf"'
+          content:
+            application/pdf:
+              schema: {type: string, format: binary}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/admin/health:
+    get:
+      tags: [Administration]
+      operationId: getAdminHealth
+      summary: Get this workspace's job counts and dispatcher liveness
+      description: |
+        INSTITUTION_ADMIN required. Counts include extraction and analysis jobs, not other
+        tenants. 200 also when status DEGRADED. Liveness is not proof the only computation
+        thread is free, quotas have room, disk is available, or all dependencies are healthy.
+      responses:
+        '200':
+          description: Workspace administrative health.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminHealth'
+              example: {status: UP, workerAlive: true, queuedJobs: 0, runningJobs: 0, failedJobs: 0}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/admin/jobs:
+    get:
+      tags: [Administration]
+      operationId: listJobs
+      summary: Page persisted jobs in this workspace
+      description: |
+        INSTITUTION_ADMIN required. Ordered createdAt DESC, id DESC. availableAt is epoch
+        milliseconds; createdAt is ISO-8601. attempts counts starts, including the initial
+        attempt. Three total attempts maximum; transient failure backoff 1 then 2 seconds.
+        Interrupted running attempts recover on restart immediately if attempts remain.
+        Environment default computation timeout is 90 seconds; it excludes queue wait.
+        Cancellation/timeouts prohibit publication and request interruption, not forced
+        termination; uncooperative code can occupy the single computation slot until exit
+        or process restart. No retry, job-cancel, bulk-job or job-detail route exists.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Workspace job page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPage'
+              example:
+                items:
+                  - id: 60000000-0000-4000-8000-000000000001
+                    kind: ANALYZE
+                    resourceId: 40000000-0000-4000-8000-000000000001
+                    status: QUEUED
+                    attempts: 0
+                    availableAt: 1794561660000
+                    createdAt: '2026-11-13T12:01:00Z'
+                    error: null
+                total: 1
+                page: 1
+                size: 20
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /api/v1/admin/audit-logs:
+    get:
+      tags: [Administration]
+      operationId: listAuditLogs
+      summary: Page retained text-free audit actions in this workspace
+      description: |
+        INSTITUTION_ADMIN required. Ordered numeric id descending. At most 2000 records
+        per workspace, not a tamper-proof/compliance archive. No passages or reviewer-note
+        text in audit fields. Document deletion leaves an action but removes dependent jobs.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Audit page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditPage'
+              example:
+                items:
+                  - id: 1
+                    userId: 10000000-0000-4000-8000-000000000001
+                    action: REGISTER
+                    resourceId: 20000000-0000-4000-8000-000000000001
+                    createdAt: '2026-11-13T12:00:00Z'
+                total: 1
+                page: 1
+                size: 20
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /health/live:
+    get:
+      tags: [Health]
+      operationId: getLiveness
+      summary: Public handler liveness without secrets
+      description: Canonical Host and shared peer-IP rate limit still apply. Does not test SQLite or job capacity.
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/HealthUp'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /health/ready:
+    get:
+      tags: [Health]
+      operationId: getReadiness
+      summary: Public dispatcher-liveness and SQLite SELECT 1 check
+      description: |
+        Canonical Host and shared rate limit still apply. Does not check free disk, quota,
+        queue delay, ingress TLS or an uncooperative computation occupying the only worker.
+        DOWN has the small Health shape, not ErrorResponse. Not production certification.
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/HealthUp'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/Limited'
+        '503':
+          description: Dispatcher not alive or SQLite probe failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              example: {status: DOWN}
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /:
+    get:
+      tags: [Static assets]
+      operationId: getIndexRoot
+      summary: Serve classpath /web/index.html
+      description: Public GET-only exact allowlist, not arbitrary filesystem serving or a wildcard SPA fallback.
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/HtmlAsset'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /index.html:
+    get:
+      tags: [Static assets]
+      operationId: getIndexFile
+      summary: Serve classpath /web/index.html
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/HtmlAsset'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /app.js:
+    get:
+      tags: [Static assets]
+      operationId: getAppScript
+      summary: Serve classpath /web/app.js
+      security: []
+      responses:
+        '200':
+          description: JavaScript asset if packaged, no-store, default restrictive CSP.
+          content:
+            text/javascript:
+              schema: {type: string}
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+  /styles.css:
+    get:
+      tags: [Static assets]
+      operationId: getStylesheet
+      summary: Serve classpath /web/styles.css
+      security: []
+      responses:
+        '200':
+          description: Stylesheet asset if packaged, no-store, default restrictive CSP.
+          content:
+            text/css:
+              schema: {type: string}
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/Limited'
+        default:
+          $ref: '#/components/responses/ApplicationError'
+components:
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: desk_session
+      description: |
+        Opaque host-only HttpOnly SameSite=Strict cookie set by register/login, Path=/,
+        absolute Max-Age=43200 seconds; Secure when configured. Only token hashes stored.
+        Not a JWT, bearer token or caller-selected workspace. No sliding refresh endpoint.
+        Up to ten sessions/user; login/session creation cleans expired sessions and the
+        oldest excess sessions. Global stored-session cap 10000 after cleanup. Logout
+        revokes only the current token. Browser JS cannot read this cookie; same-origin
+        credentials are needed. Cookie auth does not replace required mutation Origin.
+  parameters:
+    Origin:
+      name: Origin
+      in: header
+      required: true
+      description: Must exactly equal configured DESK_PUBLIC_ORIGIN. Required for every API mutation, even unauthenticated auth POSTs and bodyless DELETE.
+      schema: {type: string}
+      example: http://localhost:8080
+    Page:
+      name: page
+      in: query
+      description: One-based offset page, not a stable cursor snapshot. Decimal digits only; no signs/exponents.
+      schema: {type: integer, minimum: 1, maximum: 1000000, default: 1}
+    Size:
+      name: size
+      in: query
+      description: Maximum page length. Decimal digits only; default twenty, maximum one hundred.
+      schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+    DocumentId:
+      name: documentId
+      in: path
+      required: true
+      description: Opaque server-generated document ID, scoped to the current workspace.
+      schema: {type: string}
+      example: 30000000-0000-4000-8000-000000000001
+    AnalysisId:
+      name: analysisId
+      in: path
+      required: true
+      description: Opaque server-generated analysis ID, scoped to the current workspace.
+      schema: {type: string}
+      example: 40000000-0000-4000-8000-000000000001
+  headers:
+    SessionCookie:
+      description: New opaque host-only session cookie, HttpOnly, SameSite=Strict, Path=/, Max-Age=43200; Secure appended when configured. Token is not returned in JSON.
+      schema: {type: string}
+    RetryAfter:
+      description: Always 60 for application 429; advisory, persistent quotas do not automatically clear after a minute.
+      schema: {type: integer, enum: [60]}
+  requestBodies:
+    EmptyJson:
+      required: false
+      description: Send {} with Content-Type application/json. Zero bytes also allowed, but that Content-Type header is still mandatory.
+      content:
+        application/json:
+          schema: {type: object}
+          example: {}
+  responses:
+    BadRequest:
+      description: INVALID_REQUEST for validation, malformed JSON/query, duplicate fields/parameters/headers/cookies, invalid pagination or source constraints.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: {code: INVALID_REQUEST, message: Invalid pagination}
+    Unauthenticated:
+      description: UNAUTHENTICATED, session missing, invalid, expired or revoked.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: {code: UNAUTHENTICATED, message: Authentication required}
+    Forbidden:
+      description: INVALID_HOST, CSRF_REJECTED or FORBIDDEN. Origin/Fetch Metadata/Host validation can precede authentication and resource lookup.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: {code: CSRF_REJECTED, message: A matching Origin header is required}
+    NotFound:
+      description: NOT_FOUND for missing, other-tenant or deleted resources, unimplemented paths, or absent allowlisted assets.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: {code: NOT_FOUND, message: Resource not found}
+    Conflict:
+      description: CONFLICT; document/source not READY, report unavailable, review analysis not complete, or idempotency key used with different input, as applicable.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: {code: CONFLICT, message: Report is not available}
+    TooLarge:
+      description: BODY_TOO_LARGE, STORAGE_LIMIT, ANALYSIS_TOO_LARGE or REPORT_TOO_LARGE as applicable. Upload service also defines UPLOAD_TOO_LARGE; HTTP body guard normally wins first.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: {code: BODY_TOO_LARGE, message: Request body exceeds size limit}
+    UnsupportedMedia:
+      description: JSON_REQUIRED, UNSUPPORTED_ENCODING or UNSUPPORTED_DOCUMENT, according to the applicable body reader/format validator.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: {code: JSON_REQUIRED, message: Content-Type must be application/json}
+    Limited:
+      description: LIMIT_EXCEEDED for a rate, limiter-key table, count, storage-record, pending-job, session or PDF concurrency cap. Persistent caps require cleanup/operator action, not just waiting.
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: {code: LIMIT_EXCEEDED, message: Too many requests; try again later}
+    ApplicationError:
+      description: |
+        Other application failure, including 400 malformed header, 405 METHOD_NOT_ALLOWED,
+        500 INTERNAL_ERROR (safe generic message) or 503 UNAVAILABLE during shutdown.
+        Earlier auth/origin/rate checks may win over unsupported-method/path errors.
+        Low-level JDK/parser/transport/overload failures may instead close the connection.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: {code: INTERNAL_ERROR, message: Request could not be completed}
+    AnalysisMetadata:
+      description: Persisted analysis metadata without result, even when completed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AnalysisMetadata'
+          examples:
+            queued:
+              $ref: '#/components/examples/QueuedAnalysis'
+    JsonReport:
+      description: Immutable report wrapper containing original extracted documentText and nested result; no merged review notes.
+      headers:
+        Content-Disposition:
+          description: Fixed JSON attachment filename.
+          schema: {type: string}
+          example: 'attachment; filename="report.json"'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReportSnapshot'
+          examples:
+            emptyCorpus:
+              $ref: '#/components/examples/ReportSnapshot'
+    HealthUp:
+      description: Small public UP object; not evidence of full worker capacity or production readiness.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Health'
+          example: {status: UP}
+    HtmlAsset:
+      description: HTML index asset if packaged, no-store, default restrictive CSP.
+      content:
+        text/html:
+          schema: {type: string}
+  schemas:
+    Id:
+      type: string
+      description: Opaque server-generated UUID-shaped identifier; possession is not authorization.
+    Timestamp:
+      type: string
+      format: date-time
+      description: UTC ISO-8601 instant, possibly with fractional seconds.
+    NullableTimestamp:
+      type: string
+      format: date-time
+      nullable: true
+    NullableError:
+      type: string
+      nullable: true
+      description: Safe persisted job/resource error or null; queued retries may carry an error before a terminal status.
+    DocumentKind:
+      type: string
+      enum: [REFERENCE, SUBMISSION]
+    Profile:
+      type: string
+      enum: [QUICK, STANDARD, REFERENCE_AWARE]
+      description: |
+        QUICK exact 12-word shingles only; STANDARD exact 8-word plus lexical near windows;
+        REFERENCE_AWARE exact 6-word plus lexical near windows, excluding heuristic trailing
+        reference lists. No semantic inference, external search or AI writing detection.
+    AnalysisStatus:
+      type: string
+      enum: [QUEUED, RUNNING, COMPLETED, FAILED, CANCELLED]
+      description: Retries may return RUNNING to QUEUED. No progress percentage is exposed.
+    RegisterRequest:
+      type: object
+      required: [name, email, password, workspaceName]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 120, description: Nonblank and NUL-free; surrounding whitespace stripped.}
+        email: {type: string, minLength: 1, maxLength: 254, description: 'Basic email syntax; stripped/lowercased, globally unique, not email-verified.'}
+        password: {type: string, minLength: 12, maxLength: 1024, format: password, writeOnly: true, description: Nonblank and NUL-free; not trimmed. Length is UTF-16 units.}
+        workspaceName: {type: string, minLength: 1, maxLength: 120, description: New workspace name; nonblank and NUL-free; stripped.}
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: {type: string, minLength: 1, maxLength: 254}
+        password: {type: string, minLength: 1, maxLength: 1024, format: password, writeOnly: true, description: Nonblank and NUL-free; not trimmed.}
+    User:
+      type: object
+      required: [id, name, email, role]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        name: {type: string}
+        email: {type: string}
+        role:
+          type: string
+          enum: [INSTITUTION_ADMIN, REVIEWER, MEMBER]
+          description: Trusted stored role; newly registered users are always INSTITUTION_ADMIN. No public role-edit API.
+    Workspace:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        name: {type: string}
+    Identity:
+      type: object
+      required: [user, workspace]
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        workspace:
+          $ref: '#/components/schemas/Workspace'
+    Document:
+      type: object
+      required: [id, title, filename, kind, status, error, wordCount, pageCount, bytes, createdAt]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        title: {type: string, description: 'Supplied filename, not a separate editable title.'}
+        filename: {type: string}
+        kind:
+          $ref: '#/components/schemas/DocumentKind'
+        status: {type: string, enum: [EXTRACTING, READY, FAILED]}
+        error:
+          $ref: '#/components/schemas/NullableError'
+        wordCount: {type: integer, minimum: 0, description: 'Whitespace-split extraction count, not necessarily normalized engine wordCount.'}
+        pageCount: {type: integer, minimum: 0, description: Actual PDF pages; TXT one; DOCX zero because rendered pagination is unavailable.}
+        bytes: {type: integer, format: int64, minimum: 1, maximum: 10485760, description: 'Original uploaded byte length, retained even on extraction failure.'}
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+    CreateAnalysisRequest:
+      type: object
+      required: [documentId, profile]
+      properties:
+        documentId: {type: string, minLength: 1, maxLength: 100, description: Nonblank NUL-free ID of a READY document in this workspace.}
+        sourceIds:
+          type: array
+          maxItems: 50
+          description: Omit for all ready REFERENCE documents excluding self. [] means none. Explicit IDs deduplicated; every ID tenant-scoped and READY, no self-source. Null invalid.
+          items: {type: string, minLength: 1, maxLength: 100}
+        profile:
+          $ref: '#/components/schemas/Profile'
+    AnalysisMetadata:
+      type: object
+      required: [id, documentId, title, status, profile, createdAt, completedAt, error, sourceCount]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        documentId:
+          $ref: '#/components/schemas/Id'
+        title: {type: string}
+        status:
+          $ref: '#/components/schemas/AnalysisStatus'
+        profile:
+          $ref: '#/components/schemas/Profile'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        completedAt:
+          $ref: '#/components/schemas/NullableTimestamp'
+        error:
+          $ref: '#/components/schemas/NullableError'
+        sourceCount: {type: integer, minimum: 0, maximum: 50}
+    AnalysisDetail:
+      allOf:
+        - $ref: '#/components/schemas/AnalysisMetadata'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/EvidenceResult'
+      description: GET by ID or idempotent POST replay may include result when stored. Lists, /status and cancel omit it.
+    EvidenceResult:
+      type: object
+      required: [engineVersion, profile, wordCount, exactOverlap, nearOverlap, totalOverlap, matches, citations, limitations, semanticStatus, aiWritingStatus]
+      properties:
+        engineVersion: {type: string, example: local-evidence-1.0}
+        profile:
+          $ref: '#/components/schemas/Profile'
+        wordCount: {type: integer, minimum: 0, description: 'Entire normalized submission word count, including reference-list words.'}
+        exactOverlap: {type: number, format: double, minimum: 0, maximum: 1, description: 'Union word coverage of retained exact evidence; fraction, not a percentage.'}
+        nearOverlap: {type: number, format: double, minimum: 0, maximum: 1, description: 'Additional lexical-window coverage beyond exact, not semantic similarity or copied-word probability.'}
+        totalOverlap: {type: number, format: double, minimum: 0, maximum: 1, description: Union coverage without double-counting; not a misconduct score.}
+        matches:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/Match'
+        citations:
+          type: array
+          maxItems: 300
+          items:
+            $ref: '#/components/schemas/Citation'
+        limitations:
+          type: array
+          description: Returned methodology and any truncation/budget caveats; clients should retain and display these.
+          items: {type: string}
+        semanticStatus: {type: string, enum: [NOT_IMPLEMENTED]}
+        aiWritingStatus: {type: string, enum: [NOT_IMPLEMENTED]}
+    Match:
+      type: object
+      required: [sourceId, sourceTitle, sourceType, submittedPassage, sourcePassage, method, value, start, end, sourceStart, sourceEnd, page, citationObservation]
+      properties:
+        sourceId:
+          $ref: '#/components/schemas/Id'
+        sourceTitle: {type: string}
+        sourceType:
+          $ref: '#/components/schemas/DocumentKind'
+        submittedPassage: {type: string, description: 'Original extracted submitted substring, not normalized text.'}
+        sourcePassage: {type: string, description: Original extracted source substring.}
+        method: {type: string, enum: [EXACT, LEXICAL_JACCARD]}
+        value: {type: number, format: double, minimum: 0, maximum: 1}
+        start: {type: integer, minimum: 0, description: 'Zero-based original submitted UTF-16 start, inclusive.'}
+        end: {type: integer, minimum: 0, description: 'Original submitted UTF-16 end, exclusive.'}
+        sourceStart: {type: integer, minimum: 0, description: 'Original source UTF-16 start, inclusive.'}
+        sourceEnd: {type: integer, minimum: 0, description: 'Original source UTF-16 end, exclusive.'}
+        page: {type: integer, minimum: 1, description: 'One-based page inferred from form-feed separators, not independently verified pagination.'}
+        citationObservation: {type: string, description: 'Heuristic observation, not validated attribution or a misconduct finding.'}
+    Citation:
+      type: object
+      required: [text, kind, start, end, uncertain]
+      properties:
+        text: {type: string}
+        kind: {type: string, description: Heuristic observation label such as QUOTATION or REFERENCE_LIST.}
+        start: {type: integer, minimum: 0, description: Original submitted UTF-16 inclusive start.}
+        end: {type: integer, minimum: 0, description: Original submitted UTF-16 exclusive end.}
+        uncertain: {type: boolean, description: Current detector marks observations uncertain; no bibliographic validation.}
+    ReportSnapshot:
+      type: object
+      required: [id, analysisId, documentId, title, createdAt, completedAt, profile, sourceCount, status, documentText, result]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        analysisId:
+          $ref: '#/components/schemas/Id'
+        documentId:
+          $ref: '#/components/schemas/Id'
+        title: {type: string}
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        completedAt:
+          $ref: '#/components/schemas/Timestamp'
+        profile:
+          $ref: '#/components/schemas/Profile'
+        sourceCount: {type: integer, minimum: 0, maximum: 50}
+        status: {type: string, enum: [COMPLETED]}
+        documentText: {type: string, description: 'Original extracted submitted string for UTF-16 highlighting, not original binary file bytes.'}
+        result:
+          $ref: '#/components/schemas/EvidenceResult'
+    ReviewRequest:
+      type: object
+      required: [matchIndex, decision, note]
+      properties:
+        matchIndex: {type: integer, minimum: 0, maximum: 99999999, description: Must identify an existing zero-based stored result.matches index.}
+        decision: {type: string, minLength: 1, maxLength: 32, pattern: '^[A-Z_]+$', description: Not a server enum; conventional values NEEDS_REVIEW/ACCEPTED/FLAGGED/DISMISSED.}
+        note: {type: string, maxLength: 4000, description: 'Empty allowed, NUL prohibited; UTF-16 length.'}
+    Review:
+      type: object
+      required: [id, analysisId, userId, matchIndex, decision, note, createdAt]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        analysisId:
+          $ref: '#/components/schemas/Id'
+        userId:
+          $ref: '#/components/schemas/Id'
+        matchIndex: {type: integer, minimum: 0}
+        decision: {type: string}
+        note: {type: string}
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+    PageMetadata:
+      type: object
+      required: [total, page, size]
+      properties:
+        total: {type: integer, format: int64, minimum: 0, description: 'Scoped count before pagination, not current items length.'}
+        page: {type: integer, minimum: 1, maximum: 1000000}
+        size: {type: integer, minimum: 1, maximum: 100}
+    DocumentPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Document'
+    AnalysisPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/AnalysisMetadata'
+    ReviewPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Review'
+    Dashboard:
+      type: object
+      required: [totalDocuments, completedAnalyses, pendingAnalyses, failedAnalyses, storageBytes, recentDocuments, recentAnalyses, activity]
+      properties:
+        totalDocuments: {type: integer, format: int64, minimum: 0}
+        completedAnalyses: {type: integer, format: int64, minimum: 0}
+        pendingAnalyses: {type: integer, format: int64, minimum: 0}
+        failedAnalyses: {type: integer, format: int64, minimum: 0}
+        storageBytes: {type: integer, format: int64, minimum: 0, description: Sum of original blob byte counts; not total disk use.}
+        recentDocuments:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/Document'
+        recentAnalyses:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/AnalysisMetadata'
+        activity:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Activity'
+    Activity:
+      type: object
+      required: [id, action, resourceId, createdAt]
+      properties:
+        id: {type: integer, format: int64}
+        action: {type: string}
+        resourceId: {type: string, nullable: true}
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+    Job:
+      type: object
+      required: [id, kind, resourceId, status, attempts, availableAt, createdAt, error]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        kind: {type: string, enum: [EXTRACT, ANALYZE]}
+        resourceId:
+          $ref: '#/components/schemas/Id'
+        status:
+          $ref: '#/components/schemas/AnalysisStatus'
+        attempts: {type: integer, minimum: 0, maximum: 3}
+        availableAt: {type: integer, format: int64, description: 'Epoch milliseconds, not an ISO timestamp.'}
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        error:
+          $ref: '#/components/schemas/NullableError'
+    JobPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Job'
+    AuditEntry:
+      allOf:
+        - $ref: '#/components/schemas/Activity'
+        - type: object
+          required: [userId]
+          properties:
+            userId:
+              $ref: '#/components/schemas/Id'
+      description: Current actions REGISTER, LOGIN, LOGOUT, DOCUMENT_UPLOADED, DOCUMENT_DELETED, ANALYSIS_CREATED, ANALYSIS_CANCELLED, REVIEW_CREATED.
+    AuditPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/AuditEntry'
+    AdminHealth:
+      type: object
+      required: [status, workerAlive, queuedJobs, runningJobs, failedJobs]
+      properties:
+        status: {type: string, enum: [UP, DEGRADED]}
+        workerAlive: {type: boolean, description: 'Dispatcher thread alive and not stopping, not proof computation slot is free.'}
+        queuedJobs: {type: integer, format: int64, minimum: 0}
+        runningJobs: {type: integer, format: int64, minimum: 0}
+        failedJobs: {type: integer, format: int64, minimum: 0}
+    Health:
+      type: object
+      required: [status]
+      additionalProperties: false
+      properties:
+        status: {type: string, enum: [UP, DOWN]}
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: |
+                INVALID_REQUEST, UNAUTHENTICATED, INVALID_CREDENTIALS, INVALID_HOST,
+                CSRF_REJECTED, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED, CONFLICT,
+                DUPLICATE_DOCUMENT, BODY_TOO_LARGE, UPLOAD_TOO_LARGE, STORAGE_LIMIT,
+                ANALYSIS_TOO_LARGE, REPORT_TOO_LARGE, JSON_REQUIRED, UNSUPPORTED_ENCODING,
+                UNSUPPORTED_DOCUMENT, LIMIT_EXCEEDED, INTERNAL_ERROR, UNAVAILABLE.
+            message: {type: string, description: 'Safe human-readable explanation, not a stack trace; do not parse message text for branching.'}
+  examples:
+    Identity:
+      summary: Illustrative newly registered workspace administrator.
+      value:
+        user:
+          id: 10000000-0000-4000-8000-000000000001
+          name: Alex Reviewer
+          email: alex@example.test
+          role: INSTITUTION_ADMIN
+        workspace:
+          id: 20000000-0000-4000-8000-000000000001
+          name: Alex workspace
+    EmptyPage:
+      value: {items: [], total: 0, page: 1, size: 20}
+    ExtractingDocument:
+      summary: Illustrative immediate upload response, not completed extraction.
+      value:
+        id: 30000000-0000-4000-8000-000000000001
+        title: reference one.txt
+        filename: reference one.txt
+        kind: REFERENCE
+        status: EXTRACTING
+        error: null
+        wordCount: 0
+        pageCount: 0
+        bytes: 523
+        createdAt: '2026-11-13T12:00:00Z'
+    QueuedAnalysis:
+      summary: Illustrative selected-source request newly persisted, without result.
+      value:
+        id: 40000000-0000-4000-8000-000000000001
+        documentId: 30000000-0000-4000-8000-000000000002
+        title: submission.txt
+        status: QUEUED
+        profile: STANDARD
+        createdAt: '2026-11-13T12:01:00Z'
+        completedAt: null
+        error: null
+        sourceCount: 1
+    Review:
+      value:
+        id: 50000000-0000-4000-8000-000000000001
+        analysisId: 40000000-0000-4000-8000-000000000001
+        userId: 10000000-0000-4000-8000-000000000001
+        matchIndex: 0
+        decision: NEEDS_REVIEW
+        note: Check the attribution in context.
+        createdAt: '2026-11-13T12:02:00Z'
+    ReportSnapshot:
+      summary: Illustrative empty-corpus report; zero evidence is not a guarantee of originality. Independent fixture from the selected-source examples.
+      value:
+        id: 40000000-0000-4000-8000-000000000002
+        analysisId: 40000000-0000-4000-8000-000000000002
+        documentId: 30000000-0000-4000-8000-000000000002
+        title: submission.txt
+        createdAt: '2026-11-13T12:01:00Z'
+        completedAt: '2026-11-13T12:01:01Z'
+        profile: STANDARD
+        sourceCount: 0
+        status: COMPLETED
+        documentText: Local evidence requires careful human review.
+        result:
+          engineVersion: local-evidence-1.0
+          profile: STANDARD
+          wordCount: 6
+          exactOverlap: 0.0
+          nearOverlap: 0.0
+          totalOverlap: 0.0
+          matches: []
+          citations: []
+          limitations:
+            - 'Only supplied corpus text is searched; no web or repository search. Overlap is evidence, not a plagiarism verdict.'
+            - 'NFKC compatibility/case/whitespace normalization removes invisible formatting and soft hyphens; offsets remain original UTF-16 half-open ranges.'
+            - 'Exact normalized word shingles require 8 words; short, low-diversity and known boilerplate shingles are suppressed. Fingerprint tokens longer than 64 characters are omitted.'
+            - 'Coverage fractions use unions of normalized words in retained evidence: exact first, near only additional words, total their union. Near windows do not imply every word was copied.'
+            - 'Limits: 50 sources, 200000 characters per text, 1000000 corpus characters, 200 matches, 2000 characters and 160 words per exact passage; retrieval budgets can omit evidence.'
+            - 'Near evidence is lexical content-word set Jaccard >= 0.62 with >= 5 shared terms on 6..80-word sentence/paragraph windows; up to 12 query terms, 200 candidates, 24 reranked and 3 retained per window. Not semantic similarity.'
+            - 'Reference lists remain in the covered-word denominator and matching for this profile.'
+            - 'Citations, quotations and reference lists are heuristic, uncertain observations; no attribution or bibliographic validation. Quoted/cited prose is not automatically exempted.'
+            - 'Page is 1-based from form-feed boundaries only; without them it is 1, not verified rendered pagination. Semantic analysis, OCR and AI-authorship scoring are not implemented.'
+          semanticStatus: NOT_IMPLEMENTED
+          aiWritingStatus: NOT_IMPLEMENTED

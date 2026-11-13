@@ -13,6 +13,8 @@ class CitationSmokeTest {
     @Test
     @DisplayName("Smoke Test: Live quote paraphrase and citation formatting when GEMINI_API_KEY is available")
     void testLiveQuoteParaphraseQuality() throws Exception {
+        assumeTrue(Boolean.getBoolean("writingassistant.liveTests"),
+                "Live Gemini calls require -Dwritingassistant.liveTests=true.");
         String effectiveKey = ConfigManager.getInstance().getEffectiveApiKey();
         assumeTrue(effectiveKey != null && !effectiveKey.isBlank(),
                 "Skipping live smoke test because no GEMINI_API_KEY is configured.");

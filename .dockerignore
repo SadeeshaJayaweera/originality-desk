@@ -1,0 +1,10 @@
+.git
+.github
+target/
+desk-server-data/
+.writing-assistant/
+node_modules/
+*.log
+*.sqlite3*
+docs/screenshots/*.png
+

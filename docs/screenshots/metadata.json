@@ -1,0 +1,262 @@
+{
+  "status": "passed",
+  "startedAt": "2026-11-12T22:11:14.715Z",
+  "application": {
+    "jar": "writing-assistant-1.0.0-SNAPSHOT.jar",
+    "bytes": 44897364,
+    "sha256": "beabeec4b666c22d54e4e80c833763896720e77ae6955938b91028f18dee4e01",
+    "mainClass": "com.writingassistant.server.OriginalityDeskServer",
+    "app.js": "99099c6e6891036bcd15786debca06b4f6ae987bee9c4d2c8a3e4d80506e9d93",
+    "styles.css": "d3eadfef3a1539d94b1636bef3c2e515d3540b9cdfd61580271afa08865be1ce",
+    "index.html": "5468f8691b9044a73b4906102764cab4596e9cb8b74ea898b904ab7466638f82"
+  },
+  "isolation": {
+    "bindHost": "127.0.0.1",
+    "requestedPort": 0,
+    "temporaryDataDirectory": true,
+    "javaHomeAndTmpIsolated": true,
+    "ambientJavaSecretsNotInherited": true,
+    "resolvedOrigin": "http://127.0.0.1:53659",
+    "browserClosed": true,
+    "javaShutdown": {
+      "stopped": true,
+      "forced": false
+    },
+    "temporaryDirectoryRemoved": true
+  },
+  "syntheticData": true,
+  "mockedRequests": false,
+  "installedDependencies": false,
+  "environment": {
+    "node": "v20.20.0",
+    "platform": "darwin",
+    "architecture": "x64",
+    "browser": "147.0.7727.15"
+  },
+  "checks": [
+    {
+      "name": "Start isolated Java server on an OS-assigned loopback port",
+      "status": "passed",
+      "durationMs": 1489.4
+    },
+    {
+      "name": "Launch installed Chromium and verify served assets match this checkout",
+      "status": "passed",
+      "durationMs": 571.4
+    },
+    {
+      "name": "Validate landing markup and capture the actual public page",
+      "status": "passed",
+      "durationMs": 945.6
+    },
+    {
+      "name": "Register a primary account through the browser",
+      "status": "passed",
+      "durationMs": 1559.7
+    },
+    {
+      "name": "Log out and sign in through the real session API",
+      "status": "passed",
+      "durationMs": 478.7
+    },
+    {
+      "name": "Upload synthetic reference TXT using the real browser XHR",
+      "status": "passed",
+      "durationMs": 2361.3
+    },
+    {
+      "name": "Upload synthetic submission TXT using the real browser XHR",
+      "status": "passed",
+      "durationMs": 2300.1
+    },
+    {
+      "name": "Run STANDARD analysis with explicitly selected source IDs and poll to completion",
+      "status": "passed",
+      "durationMs": 2577.9
+    },
+    {
+      "name": "Inspect actual highlighted text and side-by-side source evidence",
+      "status": "passed",
+      "durationMs": 250.6
+    },
+    {
+      "name": "Save a reviewer decision and verify persistence after a full reload",
+      "status": "passed",
+      "durationMs": 261.7
+    },
+    {
+      "name": "Download the authenticated PDF and assert its real bytes",
+      "status": "passed",
+      "durationMs": 1946.6
+    },
+    {
+      "name": "Verify workspace isolation with a second real browser account",
+      "status": "passed",
+      "durationMs": 1049.5
+    },
+    {
+      "name": "Upload the real downloaded PDF through the API and extract its text",
+      "status": "passed",
+      "durationMs": 533.9
+    },
+    {
+      "name": "Upload a generated synthetic DOCX through the API and extract its text",
+      "status": "passed",
+      "durationMs": 532.4
+    },
+    {
+      "name": "Capture the actual desktop evidence report with its saved review",
+      "status": "passed",
+      "durationMs": 467.9
+    },
+    {
+      "name": "Persist dark theme, exercise mobile navigation, and capture the actual mobile report",
+      "status": "passed",
+      "durationMs": 469.5
+    },
+    {
+      "name": "Delete the submission in the UI and verify dependent reports/reviews are removed",
+      "status": "passed",
+      "durationMs": 164.1
+    },
+    {
+      "name": "Delete remaining synthetic documents and verify an empty workspace",
+      "status": "passed",
+      "durationMs": 197.4
+    },
+    {
+      "name": "Check browser script errors, CSP violations, and the final artifact identity",
+      "status": "passed",
+      "durationMs": 171.6
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "landing.png",
+      "caption": "Public landing, light theme, before any account is created.",
+      "capturedAt": "2026-11-12T22:11:17.986Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "fullPage": true,
+      "imageWidth": 1440,
+      "imageHeight": 3113,
+      "pngBytes": 414316,
+      "sha256": "a5366c55aa34bf6221eb11f00ed74420ec4d61c572cf75f6547bae4180b4d52b"
+    },
+    {
+      "file": "report.png",
+      "caption": "Actual STANDARD analysis of two synthetic TXT documents, light desktop theme, with server-persisted reviewer note.",
+      "capturedAt": "2026-11-12T22:11:32.310Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "fullPage": true,
+      "imageWidth": 1440,
+      "imageHeight": 2721,
+      "pngBytes": 463402,
+      "sha256": "a9b31b11dfcbcf53e45011338cc88f255087bdfeafd97b527f75454a602b21e5"
+    },
+    {
+      "file": "mobile.png",
+      "caption": "The same real synthetic-data report at 390 × 844 CSS pixels, persisted dark theme; navigation opens and closes by keyboard.",
+      "capturedAt": "2026-11-12T22:11:32.780Z",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPage": true,
+      "imageWidth": 390,
+      "imageHeight": 4376,
+      "pngBytes": 406992,
+      "sha256": "9a17f4f07699dbe101918c02506022977d9d6735f7a5bccfa07f3d7540c64a87"
+    }
+  ],
+  "observedAnalysisStatuses": [
+    "QUEUED",
+    "COMPLETED"
+  ],
+  "apiResponses": 85,
+  "browserApiResponses": 44,
+  "notCovered": [
+    "Production HTTPS/reverse proxy behavior",
+    "OCR or scanned PDFs (unavailable)",
+    "Concurrent-load/performance guarantees",
+    "Persistence across a Java server restart",
+    "Every possible file format or failure mode"
+  ],
+  "documents": {
+    "reference": {
+      "kind": "REFERENCE",
+      "status": "READY",
+      "bytes": 566,
+      "wordCount": 78,
+      "pageCount": 1,
+      "observedExtractionStatuses": [
+        "EXTRACTING",
+        "READY"
+      ],
+      "readyWaitMs": 519.7
+    },
+    "submission": {
+      "kind": "SUBMISSION",
+      "status": "READY",
+      "bytes": 723,
+      "wordCount": 98,
+      "pageCount": 1,
+      "observedExtractionStatuses": [
+        "EXTRACTING",
+        "READY"
+      ],
+      "readyWaitMs": 516.1
+    },
+    "pdf": {
+      "kind": "REFERENCE",
+      "status": "READY",
+      "bytes": 2891,
+      "wordCount": 451,
+      "pageCount": 2,
+      "observedExtractionStatuses": [
+        "EXTRACTING",
+        "READY"
+      ],
+      "readyWaitMs": 517.7
+    },
+    "docx": {
+      "kind": "REFERENCE",
+      "status": "READY",
+      "bytes": 1525,
+      "wordCount": 36,
+      "pageCount": 0,
+      "observedExtractionStatuses": [
+        "EXTRACTING",
+        "READY"
+      ],
+      "readyWaitMs": 516.7
+    }
+  },
+  "result": {
+    "engineVersion": "local-evidence-1.0",
+    "profile": "STANDARD",
+    "wordCount": 98,
+    "matches": 2,
+    "exactOverlap": 0.24489795918367346,
+    "nearOverlap": 0.07142857142857142,
+    "totalOverlap": 0.3163265306122449,
+    "citations": 2,
+    "sourceCount": 1
+  },
+  "pdf": {
+    "bytes": 2891,
+    "sha256": "e85f13f0ed2201e640f6a17328592d6e248104819084b387b1beab32955eb483",
+    "contentType": "application/pdf",
+    "header": "%PDF-",
+    "eofPresent": true
+  },
+  "browserRuntimeErrors": 0,
+  "cspViolations": 0,
+  "finishedAt": "2026-11-12T22:11:33.445Z",
+  "durationMs": 18729.4
+}

@@ -10,7 +10,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -86,8 +85,8 @@ public class GeminiClient {
         } catch (GeminiException e) {
             return GeminiStatus.failed(e.getMessage(), e.getStatusCode());
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Connection test encountered an error", e);
-            return GeminiStatus.failed("Failed to connect to Gemini API: " + e.getMessage(), 0);
+            LOGGER.warning("Connection test failed unexpectedly.");
+            return GeminiStatus.failed("Failed to connect to Gemini API. Check network and model settings.", 0);
         }
     }
 
@@ -119,19 +118,23 @@ public class GeminiClient {
 
         String apiKey = configManager.getEffectiveApiKey();
         String model = getModel();
-        String endpoint = API_BASE_URL + model + ":generateContent?key=" + apiKey;
+        if (!model.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,127}")) {
+            throw new GeminiException("Invalid Gemini model name. Check model settings.");
+        }
+        String endpoint = API_BASE_URL + model + ":generateContent";
 
         JsonObject requestBody = buildRequestBody(systemInstruction, prompt);
         String jsonPayload = GSON.toJson(requestBody);
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(endpoint))
-                .timeout(timeout)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
-                .build();
-
         try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(endpoint))
+                    .timeout(timeout)
+                    .header("Content-Type", "application/json")
+                    .header("x-goog-api-key", apiKey)
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .build();
+
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             int statusCode = response.statusCode();
             String responseBody = response.body();
@@ -140,16 +143,18 @@ public class GeminiClient {
                 String generatedText = extractTextFromResponse(responseBody);
                 return AiResponse.success(generatedText, model);
             } else {
-                String errorDetails = extractErrorMessage(responseBody, statusCode);
-                LOGGER.warning("Gemini API error (HTTP " + statusCode + "): " + errorDetails);
-                throw new GeminiException("Gemini API returned error (HTTP " + statusCode + "): " + errorDetails, statusCode);
+                LOGGER.warning("Gemini API request failed (HTTP " + statusCode + ").");
+                throw new GeminiException("Gemini API request failed (HTTP " + statusCode
+                        + "). Check credentials, model availability, quota, and service status.", statusCode);
             }
         } catch (IOException | InterruptedException e) {
-            LOGGER.log(Level.SEVERE, "Network error during Gemini API request", e);
+            LOGGER.warning("Network error during Gemini API request.");
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            throw new GeminiException("Network error communicating with Gemini API: " + e.getMessage(), e);
+            throw new GeminiException("Network error communicating with Gemini API. Check your connection and retry.");
+        } catch (RuntimeException e) {
+            throw new GeminiException("Could not send Gemini request. Check API key and model settings.");
         }
     }
 
@@ -198,22 +203,8 @@ public class GeminiClient {
             if (e instanceof GeminiException) {
                 throw (GeminiException) e;
             }
-            throw new GeminiException("Failed to parse Gemini API response: " + e.getMessage(), e);
+            throw new GeminiException("Failed to parse Gemini API response.");
         }
-    }
-
-    private String extractErrorMessage(String responseJson, int statusCode) {
-        try {
-            JsonObject root = JsonParser.parseString(responseJson).getAsJsonObject();
-            if (root.has("error")) {
-                JsonObject errorObj = root.getAsJsonObject("error");
-                String message = errorObj.has("message") ? errorObj.get("message").getAsString() : "Unknown error";
-                String status = errorObj.has("status") ? errorObj.get("status").getAsString() : "";
-                return status.isEmpty() ? message : (status + ": " + message);
-            }
-        } catch (Exception ignored) {
-        }
-        return "HTTP status " + statusCode + " - " + responseJson;
     }
 
     private String getModel() {

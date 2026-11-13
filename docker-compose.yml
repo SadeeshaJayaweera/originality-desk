@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  originality-desk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: originality-desk
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-8080}:8080"
+    environment:
+      - DESK_HOST=0.0.0.0
+      - DESK_PORT=8080
+      - DESK_PUBLIC_ORIGIN=${DESK_PUBLIC_ORIGIN:-http://localhost:8080}
+      - DESK_DATA_DIR=/app/data
+      - DESK_SECURE_COOKIES=${DESK_SECURE_COOKIES:-false}
+      - DESK_RETENTION_DAYS=${DESK_RETENTION_DAYS:-0}
+      - DESK_JOB_TIMEOUT_SECONDS=${DESK_JOB_TIMEOUT_SECONDS:-60}
+      - JAVA_OPTS=-Xms128m -Xmx512m -XX:+UseG1GC -Dfile.encoding=UTF-8
+    volumes:
+      - desk_data:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  desk_data:
+    driver: local
+
