@@ -65,3 +65,4 @@ All direct dependencies use permissive open-source licenses compatible with inst
 ## 4. Reproducible Build Configuration
 
 Originality Desk enforces byte-for-byte build reproducibility via Maven's standard `project.build.outputTimestamp` property (`2026-11-13T00:00:00Z`). This guarantees identical JAR checksums across clean rebuilds regardless of filesystem modification timestamps or geographic timezone differences.
+

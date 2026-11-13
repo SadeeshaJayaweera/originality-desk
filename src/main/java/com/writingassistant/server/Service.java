@@ -15,7 +15,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.ZipInputStream;
 
-final class Service {
+public final class Service implements AuthOperations, DocumentOperations, AnalysisOperations, ReviewOperations, SystemOperations {
     static final Gson JSON = new GsonBuilder().serializeNulls().create();
     static final int MAX_UPLOAD = 10 * 1024 * 1024;
     static final int MAX_TEXT = DocumentExtractor.MAX_CHARACTERS;
@@ -26,17 +26,17 @@ final class Service {
     private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     final ServerDatabase db;
 
-    record Actor(String userId, String workspaceId, String role) {
-        void admin() {
+    public record Actor(String userId, String workspaceId, String role) {
+        public void admin() {
             if (!"INSTITUTION_ADMIN".equals(role)) throw new ApiException(403, "FORBIDDEN", "Administrator role required");
         }
-        void reviewer() {
+        public void reviewer() {
             if (!Set.of("INSTITUTION_ADMIN", "REVIEWER").contains(role))
                 throw new ApiException(403, "FORBIDDEN", "Reviewer role required");
         }
     }
-    record Authentication(String token, Map<String,Object> body) {}
-    Service(ServerDatabase db) { this.db = db; }
+    public record Authentication(String token, Map<String,Object> body) {}
+    public Service(ServerDatabase db) { this.db = db; }
     static String now() { return Instant.now().toString(); }
     static String id() { return UUID.randomUUID().toString(); }
     static String string(JsonObject input, String field, int max) {
@@ -60,7 +60,7 @@ final class Service {
         return email;
     }
 
-    Authentication register(JsonObject input) throws Exception {
+    public Authentication register(JsonObject input) throws Exception {
         String name = string(input, "name", 120).strip();
         String email = email(input), password = string(input, "password", 1024);
         String workspace = string(input, "workspaceName", 120).strip();
@@ -80,7 +80,7 @@ final class Service {
         });
     }
 
-    Authentication login(JsonObject input) throws Exception {
+    public Authentication login(JsonObject input) throws Exception {
         String email = email(input), password = string(input, "password", 1024);
         Map<String,Object> user = db.transaction(sql -> sql.one("SELECT id,workspace_id,role,password_hash FROM users WHERE email=?", email));
         if (!Security.verify(password, user == null ? null : (String) user.get("password_hash")))
@@ -102,7 +102,7 @@ final class Service {
                 Security.hash(token), actor.workspaceId(), actor.userId(), current + SESSION_MILLIS, current);
         return token;
     }
-    Actor authenticate(String token) throws Exception {
+    public Actor authenticate(String token) throws Exception {
         if (token == null || !token.matches("[A-Za-z0-9_-]{43}")) throw unauthorized();
         Actor actor = db.transaction(sql -> {
             Map<String,Object> row = sql.one("SELECT u.id,u.workspace_id,u.role FROM sessions s JOIN users u ON u.workspace_id=s.workspace_id AND u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?", Security.hash(token), System.currentTimeMillis());
@@ -112,19 +112,19 @@ final class Service {
         return actor;
     }
     private static ApiException unauthorized() { return new ApiException(401, "UNAUTHENTICATED", "Authentication required"); }
-    void logout(Actor actor, String token) throws Exception {
+    public void logout(Actor actor, String token) throws Exception {
         db.transaction(sql -> {
             sql.execute("DELETE FROM sessions WHERE workspace_id=? AND user_id=? AND token_hash=?", actor.workspaceId(), actor.userId(), Security.hash(token));
             audit(sql, actor, "LOGOUT", actor.userId()); return null;
         });
     }
-    Map<String,Object> me(Actor actor) throws Exception { return db.transaction(sql -> identity(sql, actor)); }
+    public Map<String,Object> me(Actor actor) throws Exception { return db.transaction(sql -> identity(sql, actor)); }
     private Map<String,Object> identity(ServerDatabase.Sql sql, Actor actor) throws Exception {
         return Map.of("user", sql.one("SELECT id,name,email,role FROM users WHERE workspace_id=? AND id=?", actor.workspaceId(), actor.userId()),
                 "workspace", sql.one("SELECT id,name FROM workspaces WHERE id=?", actor.workspaceId()));
     }
 
-    Map<String,Object> upload(Actor actor, String filename, String kind, String mime, byte[] bytes) throws Exception {
+    public Map<String,Object> upload(Actor actor, String filename, String kind, String mime, byte[] bytes) throws Exception {
         validateUpload(filename, mime, bytes);
         if (!Set.of("REFERENCE", "SUBMISSION").contains(kind)) throw ApiException.bad("Invalid document kind");
         String hash = Security.hash(bytes);
@@ -197,7 +197,7 @@ final class Service {
     }
     private static ApiException unsupported() { return new ApiException(415, "UNSUPPORTED_DOCUMENT", "Expected UTF-8 TXT, PDF, or DOCX with matching content type and signature"); }
 
-    Map<String,Object> documents(Actor actor, String kind, int page, int size) throws Exception {
+    public Map<String,Object> documents(Actor actor, String kind, int page, int size) throws Exception {
         if (kind != null && !Set.of("REFERENCE", "SUBMISSION").contains(kind)) throw ApiException.bad("Invalid document kind");
         return db.transaction(sql -> {
             String filter = kind == null ? "workspace_id=?" : "workspace_id=? AND kind=?";
@@ -208,13 +208,13 @@ final class Service {
                     sql.number("SELECT COUNT(*) FROM documents WHERE " + filter, values), page, size);
         });
     }
-    Map<String,Object> document(Actor actor, String id) throws Exception { return db.transaction(sql -> document(sql, actor.workspaceId(), id)); }
+    public Map<String,Object> document(Actor actor, String id) throws Exception { return db.transaction(sql -> document(sql, actor.workspaceId(), id)); }
     private Map<String,Object> document(ServerDatabase.Sql sql, String workspace, String id) throws Exception {
         Map<String,Object> result = sql.one("SELECT " + DOCUMENT_COLUMNS + " FROM documents WHERE workspace_id=? AND id=?", workspace, id);
         if (result == null) throw ApiException.missing();
         return result;
     }
-    void deleteDocument(Actor actor, String documentId) throws Exception {
+    public void deleteDocument(Actor actor, String documentId) throws Exception {
         db.transaction(sql -> deleteDocument(sql, actor, documentId, "DOCUMENT_DELETED", null));
         db.checkpoint();
     }
@@ -242,7 +242,7 @@ final class Service {
     }
 
     static final int RETENTION_BATCH = 100;
-    int expireDocuments(int retentionDays, Instant currentTime) throws Exception {
+    public int expireDocuments(int retentionDays, Instant currentTime) throws Exception {
         if (retentionDays < 0 || retentionDays > 3650) throw new IllegalArgumentException("Invalid retention period");
         if (retentionDays == 0) return 0;
         Instant cutoff = currentTime.minus(java.time.Duration.ofDays(retentionDays));
@@ -266,7 +266,7 @@ final class Service {
         return path;
     }
 
-    Map<String,Object> createAnalysis(Actor actor, JsonObject input, String key) throws Exception {
+    public Map<String,Object> createAnalysis(Actor actor, JsonObject input, String key) throws Exception {
         String documentId = string(input, "documentId", 100), profile = string(input, "profile", 30);
         if (!Set.of("QUICK", "STANDARD", "REFERENCE_AWARE").contains(profile)) throw ApiException.bad("Invalid profile");
         if (key != null && (!key.matches("[\\x21-\\x7e]{1,128}"))) throw ApiException.bad("Invalid Idempotency-Key");
@@ -321,11 +321,11 @@ final class Service {
             return analysis(sql, workspace, analysisId, false);
         });
     }
-    Map<String,Object> analyses(Actor actor, int page, int size) throws Exception {
+    public Map<String,Object> analyses(Actor actor, int page, int size) throws Exception {
         return db.transaction(sql -> envelope(sql.rows("SELECT " + ANALYSIS_COLUMNS + " FROM analyses WHERE workspace_id=? ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?", actor.workspaceId(), size, (long) (page - 1) * size),
                 sql.number("SELECT COUNT(*) FROM analyses WHERE workspace_id=?", actor.workspaceId()), page, size));
     }
-    Map<String,Object> analysis(Actor actor, String analysisId, boolean result) throws Exception {
+    public Map<String,Object> analysis(Actor actor, String analysisId, boolean result) throws Exception {
         return db.transaction(sql -> analysis(sql, actor.workspaceId(), analysisId, result));
     }
     private Map<String,Object> analysis(ServerDatabase.Sql sql, String workspace, String analysisId, boolean result) throws Exception {
@@ -337,7 +337,7 @@ final class Service {
         }
         return row;
     }
-    Map<String,Object> cancel(Actor actor, String analysisId) throws Exception {
+    public Map<String,Object> cancel(Actor actor, String analysisId) throws Exception {
         return db.transaction(sql -> {
             Map<String,Object> row = analysis(sql, actor.workspaceId(), analysisId, false);
             if (Set.of("QUEUED", "RUNNING").contains(row.get("status"))) {
@@ -348,7 +348,7 @@ final class Service {
             return analysis(sql, actor.workspaceId(), analysisId, false);
         });
     }
-    JsonObject report(Actor actor, String analysisId) throws Exception {
+    public JsonObject report(Actor actor, String analysisId) throws Exception {
         return db.transaction(sql -> {
             Map<String,Object> row = sql.one("SELECT status,result_json FROM analyses WHERE workspace_id=? AND id=?", actor.workspaceId(), analysisId);
             if (row == null) throw ApiException.missing();
@@ -356,7 +356,7 @@ final class Service {
             return JsonParser.parseString((String) row.get("result_json")).getAsJsonObject();
         });
     }
-    Map<String,Object> review(Actor actor, String analysisId, JsonObject input) throws Exception {
+    public Map<String,Object> review(Actor actor, String analysisId, JsonObject input) throws Exception {
         actor.reviewer();
         int index = integer(input, "matchIndex");
         String decision = string(input, "decision", 32);
@@ -381,7 +381,7 @@ final class Service {
             return sql.one("SELECT id,analysis_id AS analysisId,user_id AS userId,match_index AS matchIndex,decision,note,created_at AS createdAt FROM reviews WHERE workspace_id=? AND id=?", actor.workspaceId(), reviewId);
         });
     }
-    Map<String,Object> reviews(Actor actor, String analysisId, int page, int size) throws Exception {
+    public Map<String,Object> reviews(Actor actor, String analysisId, int page, int size) throws Exception {
         actor.reviewer();
         return db.transaction(sql -> {
             analysis(sql, actor.workspaceId(), analysisId, false);
@@ -391,7 +391,7 @@ final class Service {
         });
     }
 
-    Map<String,Object> dashboard(Actor actor) throws Exception {
+    public Map<String,Object> dashboard(Actor actor) throws Exception {
         return db.transaction(sql -> {
             String workspace = actor.workspaceId();
             Map<String,Object> result = new LinkedHashMap<>();
@@ -406,7 +406,7 @@ final class Service {
             return result;
         });
     }
-    Map<String,Object> adminList(Actor actor, String type, int page, int size) throws Exception {
+    public Map<String,Object> adminList(Actor actor, String type, int page, int size) throws Exception {
         actor.admin();
         return db.transaction(sql -> {
             boolean jobs = type.equals("jobs");
@@ -418,14 +418,14 @@ final class Service {
                     sql.number("SELECT COUNT(*) FROM " + table + " WHERE workspace_id=?", actor.workspaceId()), page, size);
         });
     }
-    Map<String,Object> adminHealth(Actor actor, boolean workerAlive) throws Exception {
+    public Map<String,Object> adminHealth(Actor actor, boolean workerAlive) throws Exception {
         actor.admin();
         return db.transaction(sql -> Map.of("status", workerAlive ? "UP" : "DEGRADED", "workerAlive", workerAlive,
                 "queuedJobs", sql.number("SELECT COUNT(*) FROM jobs WHERE workspace_id=? AND status='QUEUED'", actor.workspaceId()),
                 "runningJobs", sql.number("SELECT COUNT(*) FROM jobs WHERE workspace_id=? AND status='RUNNING'", actor.workspaceId()),
                 "failedJobs", sql.number("SELECT COUNT(*) FROM jobs WHERE workspace_id=? AND status='FAILED'", actor.workspaceId())));
     }
-    boolean ready() { try { return db.transaction(sql -> sql.number("SELECT 1")) == 1; } catch (Exception e) { return false; } }
+    public boolean ready() { try { return db.transaction(sql -> sql.number("SELECT 1")) == 1; } catch (Exception e) { return false; } }
     static Map<String,Object> envelope(List<Map<String,Object>> items, long total, int page, int size) {
         return Map.of("items", items, "total", total, "page", page, "size", size);
     }

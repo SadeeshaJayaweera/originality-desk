@@ -177,3 +177,4 @@ stateDiagram-v2
    - `X-Content-Type-Options: nosniff`.
    - `X-Frame-Options: DENY`.
    - SameSite cookie policies on session cookies.
+
