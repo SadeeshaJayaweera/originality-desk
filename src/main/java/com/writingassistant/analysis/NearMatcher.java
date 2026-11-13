@@ -8,14 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-final class NearMatcher {
+public final class NearMatcher {
     private static final int MAX_SEGMENTS = 20_000;
     private static final int MAX_POSTINGS = 128;
     private static final int MAX_CANDIDATE_VISITS = 250_000;
     private NearMatcher() { }
     private record Scored(EvidenceSegments.Segment segment, double value) { }
 
-    static void addMatches(String text, TextNormalizer.NormalizedText submitted, int limit,
+    public static void addMatches(String text, TextNormalizer.NormalizedText submitted, int limit,
             List<EvidenceCorpus.Document> corpus, List<EvidenceCorpus.Hit> hits, List<String> limitations) {
         if (hits.size() >= EvidenceCorpus.MAX_MATCHES) return;
         List<EvidenceSegments.Segment> segments = new ArrayList<>();

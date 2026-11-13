@@ -4,11 +4,11 @@ import java.util.BitSet;
 import java.util.List;
 
 /** Word coverage, not character similarity; near windows contribute only beyond the exact union. */
-final class OverlapCoverage {
-    record Coverage(double exact, double near, double total) { }
+public final class OverlapCoverage {
+    public record Coverage(double exact, double near, double total) { }
     private OverlapCoverage() { }
 
-    static Coverage calculate(List<TextNormalizer.Token> tokens, int limit, List<EvidenceCorpus.Hit> hits) {
+    public static Coverage calculate(List<TextNormalizer.Token> tokens, int limit, List<EvidenceCorpus.Hit> hits) {
         BitSet exact = new BitSet(tokens.size());
         BitSet near = new BitSet(tokens.size());
         int denominator = 0;

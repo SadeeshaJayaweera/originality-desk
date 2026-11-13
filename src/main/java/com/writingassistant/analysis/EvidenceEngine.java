@@ -5,7 +5,9 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
+import com.writingassistant.similarity.CompositeSimilarityEngine;
 
 /**
  * Local corpus evidence, not a plagiarism verdict. All offsets index the original Java String
@@ -19,6 +21,20 @@ public final class EvidenceEngine {
     public static final String ENGINE_VERSION = "local-evidence-1.0";
     public static final int MAX_SOURCES = 50;
     public static final int MAX_CORPUS_CHARACTERS = 1_000_000;
+
+    private final CompositeSimilarityEngine similarityEngine;
+
+    public EvidenceEngine() {
+        this(new CompositeSimilarityEngine());
+    }
+
+    public EvidenceEngine(CompositeSimilarityEngine similarityEngine) {
+        this.similarityEngine = Objects.requireNonNull(similarityEngine, "similarityEngine must not be null");
+    }
+
+    public CompositeSimilarityEngine getSimilarityEngine() {
+        return similarityEngine;
+    }
 
     public record Source(String id, String title, String text, String type) { }
     public record Result(String engineVersion, String profile, int wordCount, double exactOverlap,
