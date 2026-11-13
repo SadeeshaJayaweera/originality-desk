@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-final class ExactMatcher {
+public final class ExactMatcher {
     private static final int MAX_INDEX_SHINGLES = 100_000;
     private static final int MAX_SEED_VISITS = 250_000;
     private static final int MAX_POSTINGS_PER_SOURCE = 8;
@@ -19,7 +19,7 @@ final class ExactMatcher {
         final Map<Integer, Integer> counts = new HashMap<>();
     }
 
-    static List<EvidenceCorpus.Hit> match(TextNormalizer.NormalizedText submitted, int limit,
+    public static List<EvidenceCorpus.Hit> match(TextNormalizer.NormalizedText submitted, int limit,
             List<EvidenceCorpus.Document> corpus, int words, List<String> limitations) {
         Map<String, Bucket> index = new HashMap<>();
         int indexed = 0;

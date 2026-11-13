@@ -17,7 +17,7 @@ This document tracks the live implementation status of the 40 individual Pull Re
 
 | Total PRs | Completed / Ready | In Progress | Blocked | Not Started |
 |---|---|---|---|---|
-| **40** | **20** | **0** | **0** | **20** |
+| **40** | **21** | **0** | **0** | **19** |
 
 ---
 
@@ -45,7 +45,7 @@ This document tracks the live implementation status of the 40 individual Pull Re
 | **18** | CORE Integration and Full-Text Availability | `feature/pr-18-core-integration-fulltext` | `READY_FOR_REVIEW` | `mvn test -Dtest=CoreSourceProviderTest` | 100% Pass (4/4 tests) | `CoreSourceProvider.java`, `CoreSourceProviderTest.java` | CORE API v3 client, Bearer token authentication, full-text download URL detection, DOI fallback search, 401/429 status translation |
 | **19** | Unified External Reference Search | `feature/pr-19-unified-external-reference-search` | `READY_FOR_REVIEW` | `mvn test -Dtest=UnifiedExternalReferenceSearchTest` | 100% Pass (4/4 tests) | `UnifiedExternalReferenceSearch.java`, `UnifiedSearchResult.java`, `UnifiedExternalReferenceSearchTest.java` | Parallel federated scholarly search coordinator, DOI & title deduplication, metadata merging, full-text priority ranking, fault-tolerant aggregation |
 | **20** | External Reference Evidence and Source Attribution | `feature/pr-20-external-reference-attribution` | `READY_FOR_REVIEW` | `mvn test -Dtest=ExternalReferenceEvidenceTest,ScholarlyCitationFormatterTest` | 100% Pass (11/11 tests) | `ExternalReferenceEvidence.java`, `ScholarlyCitationFormatter.java`, `DocumentOperations.java`, `Service.java`, `OriginalityDeskServer.java`, `Reports.java`, `V001__server.sql`, `ExternalReferenceEvidenceTest.java`, `ScholarlyCitationFormatterTest.java` | External source attribution persistence, APA/IEEE/MLA/BibTeX citation generator, DOI publisher links, workspace reference import, tenant isolation |
-| **21** | Similarity Engine Architecture | `feature/pr-21-similarity-engine-architecture` | `NOT_STARTED` | Pending | Pending | `SimilarityStrategy.java` | Target: decouple exact/near/semantic engines |
+| **21** | Similarity Engine Architecture | `feature/pr-21-similarity-engine-architecture` | `READY_FOR_REVIEW` | `mvn test -Dtest=SimilarityStrategyArchitectureTest,EvidenceEngineTest` | 100% Pass (23/23 tests) | `SimilarityStrategy.java`, `SimilarityStrategyType.java`, `SimilarityTarget.java`, `SimilaritySource.java`, `SimilaritySpan.java`, `SimilarityOptions.java`, `StrategyMatchResult.java`, `ExactSimilarityStrategy.java`, `NearDuplicateSimilarityStrategy.java`, `HeuristicSimilarityStrategy.java`, `SemanticSimilarityStrategy.java`, `SimilarityStrategyRegistry.java`, `CompositeSimilarityEngine.java`, `EvidenceEngine.java`, `SimilarityStrategyArchitectureTest.java` | Decoupled similarity engine architecture with pluggable strategy interface, exact/near/heuristic/semantic implementations, registry, and composite orchestration |
 | **22** | Embedding Model Evaluation and Selection | `feature/pr-22-embedding-model-selection` | `NOT_STARTED` | Pending | Pending | Evaluation benchmarks & docs | Target: Sentence Transformers selection |
 | **23** | ONNX Model Runtime Integration | `feature/pr-23-onnx-runtime-integration` | `NOT_STARTED` | Pending | Pending | ONNX Runtime Java, tokenizers | Target: deterministic local embeddings |
 | **24** | Document Chunking and Semantic Embeddings | `feature/pr-24-document-chunking-embeddings` | `NOT_STARTED` | Pending | Pending | Chunking & embedding pipelines | Target: sentence-aware chunk coordinates |
