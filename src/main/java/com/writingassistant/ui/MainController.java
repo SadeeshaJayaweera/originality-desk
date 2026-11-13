@@ -11,6 +11,7 @@ import com.writingassistant.core.rewrite.RewriteResult;
 import com.writingassistant.core.similarity.DefaultSimilarityChecker;
 import com.writingassistant.core.similarity.MatchedSpan;
 import com.writingassistant.core.similarity.SimilarityReport;
+import com.writingassistant.core.similarity.SimilarityConfig;
 import com.writingassistant.core.similarity.SimilarityRisk;
 import com.writingassistant.data.*;
 import com.writingassistant.logging.AppLogger;
@@ -44,7 +45,7 @@ public class MainController {
     private static final Logger LOGGER = AppLogger.getLogger(MainController.class);
 
     private final DefaultRewriteEngine rewriteEngine;
-    private final DefaultSimilarityChecker similarityChecker;
+    private DefaultSimilarityChecker similarityChecker;
     private final CitationLibrary citationLibrary;
     private final DocumentDao documentDao;
     private final ConfigManager configManager;
@@ -90,12 +91,16 @@ public class MainController {
     @FXML private Button appendBibToDocBtn;
 
     public MainController() {
-        this.configManager = ConfigManager.getInstance();
+        this(ConfigManager.getInstance(), DatabaseManager.getInstance(), new DocumentRecord("Untitled Document", null));
+    }
+
+    MainController(ConfigManager configManager, DatabaseManager databaseManager, DocumentRecord document) {
+        this.configManager = configManager;
         this.rewriteEngine = new DefaultRewriteEngine(new GeminiClient(configManager));
         this.similarityChecker = new DefaultSimilarityChecker();
-        this.citationLibrary = new CitationLibrary(DatabaseManager.getInstance());
-        this.documentDao = new SqliteDocumentDao(DatabaseManager.getInstance());
-        this.currentDocument = new DocumentRecord("Untitled Document", null);
+        this.citationLibrary = new CitationLibrary(databaseManager);
+        this.documentDao = new SqliteDocumentDao(databaseManager);
+        this.currentDocument = document;
     }
 
     @FXML
@@ -359,16 +364,22 @@ public class MainController {
 
     @FXML
     private void handleRunSimilarityCheck() {
-        String source = simSourceArea.getText().trim();
-        String paraphrase = simParaphraseArea.getText().trim();
+        String source = simSourceArea.getText();
+        String paraphrase = simParaphraseArea.getText();
 
-        if (source.isEmpty() || paraphrase.isEmpty()) {
+        if (source.isBlank() || paraphrase.isBlank()) {
             simGuidanceLabel.setText("Please enter both the original source passage and candidate paraphrase.");
             return;
         }
 
-        SimilarityReport report = similarityChecker.checkSimilarity(source, paraphrase);
-        renderSimilarityReport(paraphrase, report);
+        try {
+            SimilarityReport report = similarityChecker.checkSimilarity(source, paraphrase);
+            renderSimilarityReport(paraphrase, report);
+        } catch (IllegalArgumentException e) {
+            simReportCard.setVisible(false);
+            simReportCard.setManaged(false);
+            showError("Similarity check unavailable", e.getMessage());
+        }
     }
 
     private void renderSimilarityReport(String rawParaphrase, SimilarityReport report) {
@@ -442,15 +453,22 @@ public class MainController {
     // Bibliography Management
     // =========================================================================
 
+    List<SourceQuote> getDocumentSources() throws SQLException {
+        return documentDao.getCitationsForDocument(currentDocument.getId());
+    }
+
+    void unlinkDocumentSource(String citationId) throws SQLException {
+        documentDao.unlinkCitation(currentDocument.getId(), citationId);
+    }
+
     private void refreshBibliographyList() {
         try {
-            List<SourceQuote> docSources = documentDao.getCitationsForDocument(currentDocument.getId());
-            if (docSources.isEmpty()) {
-                docSources = citationLibrary.findAllSources();
-            }
+            List<SourceQuote> docSources = getDocumentSources();
             bibSourcesListView.setItems(FXCollections.observableArrayList(docSources));
             updateBibliographyPreview(docSources);
         } catch (Exception e) {
+            bibSourcesListView.getItems().clear();
+            bibFormattedPreview.setText("(Could not load this document's citations)");
             LOGGER.log(Level.WARNING, "Error loading bibliography sources", e);
         }
     }
@@ -475,10 +493,7 @@ public class MainController {
                 case MLA -> "\n\nWorks Cited\n\n";
                 case CHICAGO -> "\n\nBibliography\n\n";
             };
-            List<SourceQuote> docSources = documentDao.getCitationsForDocument(currentDocument.getId());
-            if (docSources.isEmpty()) {
-                docSources = citationLibrary.findAllSources();
-            }
+            List<SourceQuote> docSources = getDocumentSources();
             List<String> entries = CitationLibrary.generateBibliography(docSources, style);
             if (!entries.isEmpty()) {
                 documentEditor.appendText(heading + String.join("\n\n", entries));
@@ -493,11 +508,11 @@ public class MainController {
         SourceQuote selected = bibSourcesListView.getSelectionModel().getSelectedItem();
         if (selected != null) {
             try {
-                documentDao.unlinkCitation(currentDocument.getId(), selected.getId());
-                citationLibrary.deleteById(selected.getId());
+                unlinkDocumentSource(selected.getId());
                 refreshBibliographyList();
+                showInfo("Source removed", "The source was unlinked from this document. It remains in the citation library and other documents.");
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Error deleting source", e);
+                LOGGER.log(Level.WARNING, "Error unlinking source from document", e);
             }
         }
     }
@@ -550,10 +565,7 @@ public class MainController {
         if (file != null) {
             try {
                 CitationStyle style = globalStyleCombo.getValue();
-                List<SourceQuote> docSources = documentDao.getCitationsForDocument(currentDocument.getId());
-                if (docSources.isEmpty()) {
-                    docSources = citationLibrary.findAllSources();
-                }
+                List<SourceQuote> docSources = getDocumentSources();
                 List<String> bibliography = CitationLibrary.generateBibliography(docSources, style);
                 DocxService.exportDocx(file.toPath(), documentEditor.getText(), bibliography, style);
 
@@ -583,11 +595,15 @@ public class MainController {
     private void applySettingsDefaults() {
         AppConfig config = configManager.getConfig();
         // Update similarity checker config
-        similarityChecker.getConfig().setModerateThreshold(config.getSimilarityModerateThreshold());
-        similarityChecker.getConfig().setHighThreshold(config.getSimilarityHighThreshold());
-        similarityChecker.getConfig().setWeightNGram(config.getSimilarityWeightNGram());
-        similarityChecker.getConfig().setWeightLcs(config.getSimilarityWeightLcs());
-        similarityChecker.getConfig().setWeightLevenshtein(config.getSimilarityWeightLevenshtein());
+        try {
+            similarityChecker = new DefaultSimilarityChecker(new SimilarityConfig(
+                    config.getSimilarityWeightNGram(), config.getSimilarityWeightLcs(),
+                    config.getSimilarityWeightLevenshtein(), config.getSimilarityModerateThreshold(),
+                    config.getSimilarityHighThreshold()));
+        } catch (IllegalArgumentException e) {
+            similarityChecker = new DefaultSimilarityChecker();
+            LOGGER.warning("Invalid similarity settings; using safe defaults.");
+        }
 
         try {
             globalStyleCombo.setValue(CitationStyle.valueOf(config.getDefaultCitationStyle().toUpperCase()));

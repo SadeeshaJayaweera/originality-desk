@@ -6,6 +6,7 @@ import com.writingassistant.config.AppConfig;
 import com.writingassistant.config.ConfigManager;
 import com.writingassistant.core.citation.CitationStyle;
 import com.writingassistant.core.rewrite.RewriteMode;
+import com.writingassistant.core.similarity.SimilarityConfig;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -29,6 +30,7 @@ public class SettingsDialog extends Dialog<Boolean> {
     private ComboBox<String> modelCombo;
     private Label connectionStatusLabel;
     private Button testConnectionBtn;
+    private CheckBox offlineModeCheckBox;
 
     private ComboBox<CitationStyle> defaultStyleCombo;
     private ComboBox<RewriteMode> defaultModeCombo;
@@ -122,7 +124,8 @@ public class SettingsDialog extends Dialog<Boolean> {
         offlineNote.setWrapText(true);
         offlineNote.getStyleClass().add("text-muted");
 
-        aiBox.getChildren().addAll(apiSectionLbl, keyBox, modelBox, testBox, offlineNote);
+        offlineModeCheckBox = new CheckBox("Offline mode (never contact Gemini, even when a key is configured)");
+        aiBox.getChildren().addAll(apiSectionLbl, keyBox, modelBox, offlineModeCheckBox, testBox, offlineNote);
         aiTab.setContent(aiBox);
 
         // Tab 2: Writing & Citation Defaults
@@ -206,13 +209,19 @@ public class SettingsDialog extends Dialog<Boolean> {
         ButtonType cancelBtnType = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
         dialogPane.getButtonTypes().addAll(saveBtnType, cancelBtnType);
 
-        setResultConverter(buttonType -> {
-            if (buttonType == saveBtnType) {
+        dialogPane.lookupButton(saveBtnType).addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            try {
+                validateSimilaritySettings();
                 saveSettings();
-                return true;
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                event.consume();
+                Alert alert = new Alert(Alert.AlertType.ERROR, e.getMessage(), ButtonType.OK);
+                alert.initOwner(getDialogPane().getScene().getWindow());
+                alert.showAndWait();
             }
-            return false;
         });
+
+        setResultConverter(buttonType -> buttonType == saveBtnType);
     }
 
     private void toggleApiKeyVisibility() {
@@ -238,6 +247,7 @@ public class SettingsDialog extends Dialog<Boolean> {
             apiKeyField.setText(config.getGeminiApiKey());
         }
         modelCombo.setValue(config.getGeminiModel());
+        offlineModeCheckBox.setSelected(config.isOfflineMode());
 
         try {
             defaultStyleCombo.setValue(CitationStyle.valueOf(config.getDefaultCitationStyle().toUpperCase()));
@@ -267,6 +277,10 @@ public class SettingsDialog extends Dialog<Boolean> {
     }
 
     private void handleTestConnection() {
+        if (offlineModeCheckBox.isSelected()) {
+            connectionStatusLabel.setText("Offline mode is enabled; no network request was made.");
+            return;
+        }
         String enteredKey = apiKeyField.getText().trim();
         String chosenModel = modelCombo.getValue();
 
@@ -274,8 +288,12 @@ public class SettingsDialog extends Dialog<Boolean> {
         connectionStatusLabel.setText("Connecting to Gemini API...");
         connectionStatusLabel.setStyle("-fx-text-fill: #38bdf8;");
 
+        ConfigManager testConfig = new ConfigManager(configManager.getAppDataDir());
+        testConfig.getConfig().setGeminiApiKey(enteredKey.isEmpty() ? null : enteredKey);
+        testConfig.getConfig().setGeminiModel(chosenModel);
+        testConfig.getConfig().setOfflineMode(false);
         new Thread(() -> {
-            GeminiClient testClient = new GeminiClient(enteredKey, chosenModel);
+            GeminiClient testClient = new GeminiClient(testConfig);
             GeminiStatus status = testClient.testConnection();
             Platform.runLater(() -> {
                 if (status.isAvailable()) {
@@ -290,10 +308,21 @@ public class SettingsDialog extends Dialog<Boolean> {
         }).start();
     }
 
+    private void validateSimilaritySettings() {
+        moderateThresholdSpinner.commitValue();
+        highThresholdSpinner.commitValue();
+        weightNGramSpinner.commitValue();
+        weightLcsSpinner.commitValue();
+        weightLevSpinner.commitValue();
+        new SimilarityConfig(weightNGramSpinner.getValue(), weightLcsSpinner.getValue(), weightLevSpinner.getValue(),
+                moderateThresholdSpinner.getValue(), highThresholdSpinner.getValue());
+    }
+
     private void saveSettings() {
         AppConfig config = configManager.getConfig();
         String apiKey = apiKeyField.getText().trim();
         config.setGeminiApiKey(apiKey.isEmpty() ? null : apiKey);
+        config.setOfflineMode(offlineModeCheckBox.isSelected());
         config.setGeminiModel(modelCombo.getValue());
         config.setDefaultCitationStyle(defaultStyleCombo.getValue().name());
         config.setDefaultRewriteMode(defaultModeCombo.getValue().name());

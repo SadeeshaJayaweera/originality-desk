@@ -29,7 +29,23 @@ public class Main {
     private static final Logger LOGGER = AppLogger.getLogger(Main.class);
 
     public static void main(String[] args) {
-        // Initialize configuration and rotating logger
+        // Fast-path: check for standalone server mode or help before initializing desktop resources
+        for (String arg : args) {
+            if ("--help".equalsIgnoreCase(arg) || "-h".equalsIgnoreCase(arg)) {
+                printHelp();
+                return;
+            } else if ("--server".equalsIgnoreCase(arg) || "--web".equalsIgnoreCase(arg)) {
+                try {
+                    com.writingassistant.server.OriginalityDeskServer.main(args);
+                } catch (Exception e) {
+                    System.err.println("Originality Desk server failed: " + e.getMessage());
+                    System.exit(1);
+                }
+                return;
+            }
+        }
+
+        // Initialize configuration and rotating logger for desktop application
         ConfigManager configManager = ConfigManager.getInstance();
         AppLogger.init(configManager);
 
@@ -46,9 +62,6 @@ public class Main {
         for (String arg : args) {
             if ("--smoke-test".equalsIgnoreCase(arg)) {
                 runSmokeTest(configManager, dbManager);
-                return;
-            } else if ("--help".equalsIgnoreCase(arg) || "-h".equalsIgnoreCase(arg)) {
-                printHelp();
                 return;
             }
         }
@@ -236,10 +249,11 @@ public class Main {
     }
 
     private static void printHelp() {
-        System.out.println("Writing Assistant - Desktop Writing Tool");
+        System.out.println("Originality Desk & Writing Assistant");
         System.out.println("Usage:");
-        System.out.println("  java -jar writing-assistant.jar              Launch JavaFX GUI");
-        System.out.println("  java -jar writing-assistant.jar --smoke-test Run headless diagnostic checks");
+        System.out.println("  java -jar writing-assistant.jar              Launch JavaFX GUI (desktop)");
+        System.out.println("  java -jar writing-assistant.jar --server     Launch Originality Desk web server");
+        System.out.println("  java -jar writing-assistant.jar --smoke-test Run desktop diagnostic checks");
         System.out.println("  java -jar writing-assistant.jar --help       Show this help message");
     }
 }

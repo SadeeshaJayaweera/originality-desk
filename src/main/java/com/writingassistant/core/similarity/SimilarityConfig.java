@@ -26,6 +26,44 @@ public class SimilarityConfig {
         this.weightLevenshtein = weightLevenshtein;
         this.moderateThreshold = moderateThreshold;
         this.highThreshold = highThreshold;
+        validate();
+    }
+
+    public void validate() {
+        validateWeight(weightNGram);
+        validateWeight(weightLcs);
+        validateWeight(weightLevenshtein);
+        if (Math.abs(weightNGram + weightLcs + weightLevenshtein - 1.0) > 1e-9) {
+            throw new IllegalArgumentException("Similarity weights must sum to 1.");
+        }
+        validateThresholds(moderateThreshold, highThreshold);
+        validateNGrams(minNGramSize, maxNGramSize);
+        validateSpanWords(minSpanWords);
+    }
+
+    private static void validateWeight(double weight) {
+        if (!Double.isFinite(weight) || weight < 0.0 || weight > 1.0) {
+            throw new IllegalArgumentException("Similarity weights must be finite and between 0 and 1.");
+        }
+    }
+
+    private static void validateThresholds(double moderate, double high) {
+        if (!Double.isFinite(moderate) || !Double.isFinite(high)
+                || moderate < 0.0 || high > 100.0 || moderate >= high) {
+            throw new IllegalArgumentException("Similarity thresholds must satisfy 0 <= moderate < high <= 100.");
+        }
+    }
+
+    private static void validateNGrams(int min, int max) {
+        if (min < 1 || min > max || max > 16) {
+            throw new IllegalArgumentException("N-gram sizes must satisfy 1 <= minimum <= maximum <= 16.");
+        }
+    }
+
+    private static void validateSpanWords(int words) {
+        if (words < 1 || words > 100) {
+            throw new IllegalArgumentException("Minimum span length must be between 1 and 100 words.");
+        }
     }
 
     public static SimilarityConfig defaultConfig() {
@@ -37,6 +75,7 @@ public class SimilarityConfig {
     }
 
     public void setWeightNGram(double weightNGram) {
+        validateWeight(weightNGram);
         this.weightNGram = weightNGram;
     }
 
@@ -45,6 +84,7 @@ public class SimilarityConfig {
     }
 
     public void setWeightLcs(double weightLcs) {
+        validateWeight(weightLcs);
         this.weightLcs = weightLcs;
     }
 
@@ -53,6 +93,7 @@ public class SimilarityConfig {
     }
 
     public void setWeightLevenshtein(double weightLevenshtein) {
+        validateWeight(weightLevenshtein);
         this.weightLevenshtein = weightLevenshtein;
     }
 
@@ -61,6 +102,7 @@ public class SimilarityConfig {
     }
 
     public void setModerateThreshold(double moderateThreshold) {
+        validateThresholds(moderateThreshold, highThreshold);
         this.moderateThreshold = moderateThreshold;
     }
 
@@ -69,6 +111,7 @@ public class SimilarityConfig {
     }
 
     public void setHighThreshold(double highThreshold) {
+        validateThresholds(moderateThreshold, highThreshold);
         this.highThreshold = highThreshold;
     }
 
@@ -77,6 +120,7 @@ public class SimilarityConfig {
     }
 
     public void setMinNGramSize(int minNGramSize) {
+        validateNGrams(minNGramSize, maxNGramSize);
         this.minNGramSize = minNGramSize;
     }
 
@@ -85,6 +129,7 @@ public class SimilarityConfig {
     }
 
     public void setMaxNGramSize(int maxNGramSize) {
+        validateNGrams(minNGramSize, maxNGramSize);
         this.maxNGramSize = maxNGramSize;
     }
 
@@ -93,6 +138,7 @@ public class SimilarityConfig {
     }
 
     public void setMinSpanWords(int minSpanWords) {
+        validateSpanWords(minSpanWords);
         this.minSpanWords = minSpanWords;
     }
 }

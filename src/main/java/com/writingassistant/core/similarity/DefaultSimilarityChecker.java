@@ -13,6 +13,10 @@ public class DefaultSimilarityChecker implements SimilarityChecker {
 
     private static final Pattern WORD_PATTERN = Pattern.compile("[\\p{L}\\p{N}]+");
 
+    // These quadratic algorithms are for passages, not whole documents. Reject rather than truncate scores.
+    public static final int MAX_TEXT_CHARS = 4_000;
+    public static final int MAX_WORDS = 1_000;
+
     private final SimilarityConfig config;
 
     public DefaultSimilarityChecker() {
@@ -21,6 +25,7 @@ public class DefaultSimilarityChecker implements SimilarityChecker {
 
     public DefaultSimilarityChecker(SimilarityConfig config) {
         this.config = (config != null) ? config : SimilarityConfig.defaultConfig();
+        this.config.validate();
     }
 
     @Override
@@ -28,6 +33,9 @@ public class DefaultSimilarityChecker implements SimilarityChecker {
         if (sourceText == null) sourceText = "";
         if (paraphraseText == null) paraphraseText = "";
 
+        config.validate();
+        requireTextLimit(sourceText);
+        requireTextLimit(paraphraseText);
         String trimmedSource = sourceText.trim();
         String trimmedPara = paraphraseText.trim();
 
@@ -37,8 +45,8 @@ public class DefaultSimilarityChecker implements SimilarityChecker {
         }
 
         // Tokenize with character offset tracking in the paraphrase text
-        List<Token> sourceTokens = tokenizeWithOffsets(trimmedSource);
-        List<Token> paraTokens = tokenizeWithOffsets(trimmedPara);
+        List<Token> sourceTokens = tokenizeWithOffsets(sourceText);
+        List<Token> paraTokens = tokenizeWithOffsets(paraphraseText);
 
         if (sourceTokens.isEmpty() || paraTokens.isEmpty()) {
             return new SimilarityReport(0.0, SimilarityRisk.LOW, Collections.emptyList(), 0.0, 0.0, 0.0);
@@ -75,7 +83,7 @@ public class DefaultSimilarityChecker implements SimilarityChecker {
         }
 
         // 6. Extract Flagged Spans for UI Highlighting
-        List<MatchedSpan> matchedSpans = extractOverlappingSpans(sourceWords, paraTokens, trimmedPara);
+        List<MatchedSpan> matchedSpans = extractOverlappingSpans(sourceWords, paraTokens, paraphraseText);
 
         return new SimilarityReport(
                 compositeScore,
@@ -91,6 +99,9 @@ public class DefaultSimilarityChecker implements SimilarityChecker {
      * Computes average n-gram overlap across configured n-gram sizes (e.g. 3-grams and 4-grams).
      */
     public double computeAverageNGramOverlap(List<String> sourceWords, List<String> paraWords) {
+        config.validate();
+        requireWordLimit(sourceWords);
+        requireWordLimit(paraWords);
         if (sourceWords.isEmpty() || paraWords.isEmpty()) {
             return 0.0;
         }
@@ -119,6 +130,11 @@ public class DefaultSimilarityChecker implements SimilarityChecker {
      * Overlap = |ParaphraseNGrams ∩ SourceNGrams| / |ParaphraseNGrams|
      */
     public double computeSingleNGramOverlap(List<String> sourceWords, List<String> paraWords, int n) {
+        requireWordLimit(sourceWords);
+        requireWordLimit(paraWords);
+        if (n < 1 || n > 16) {
+            throw new IllegalArgumentException("N-gram size must be between 1 and 16.");
+        }
         if (paraWords.size() < n || sourceWords.size() < n) {
             return 0.0;
         }
@@ -145,6 +161,8 @@ public class DefaultSimilarityChecker implements SimilarityChecker {
      * Catches preserved structural chains and contiguous chunks.
      */
     public double computeLcsRatio(List<String> sourceWords, List<String> paraWords) {
+        requireWordLimit(sourceWords);
+        requireWordLimit(paraWords);
         if (sourceWords.isEmpty() || paraWords.isEmpty()) {
             return 0.0;
         }
@@ -178,6 +196,8 @@ public class DefaultSimilarityChecker implements SimilarityChecker {
      * Similarity = 1.0 - (LevenshteinDistance / max(len(text1), len(text2)))
      */
     public double computeLevenshteinSimilarity(String text1, String text2) {
+        requireTextLimit(text1);
+        requireTextLimit(text2);
         if (text1.equals(text2)) {
             return 1.0;
         }
@@ -279,9 +299,30 @@ public class DefaultSimilarityChecker implements SimilarityChecker {
         Matcher matcher = WORD_PATTERN.matcher(text);
         while (matcher.find()) {
             String word = matcher.group().toLowerCase(Locale.ROOT);
+            if (tokens.size() >= MAX_WORDS) {
+                throw new IllegalArgumentException("Similarity analysis supports at most " + MAX_WORDS + " words per passage.");
+            }
             tokens.add(new Token(word, matcher.start(), matcher.end()));
         }
         return tokens;
+    }
+
+    private static void requireTextLimit(String text) {
+        if (text.length() > MAX_TEXT_CHARS) {
+            throw new IllegalArgumentException("Similarity analysis supports at most " + MAX_TEXT_CHARS
+                    + " characters per passage. Select a shorter passage.");
+        }
+    }
+
+    private static void requireWordLimit(List<String> words) {
+        if (words.size() > MAX_WORDS) {
+            throw new IllegalArgumentException("Similarity analysis supports at most " + MAX_WORDS + " words per passage.");
+        }
+        for (String word : words) {
+            if (word.length() > MAX_TEXT_CHARS) {
+                throw new IllegalArgumentException("Similarity token exceeds the passage character limit.");
+            }
+        }
     }
 
     public SimilarityConfig getConfig() {

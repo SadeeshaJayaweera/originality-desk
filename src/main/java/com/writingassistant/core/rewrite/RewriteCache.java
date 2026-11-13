@@ -3,15 +3,13 @@ package com.writingassistant.core.rewrite;
 import com.writingassistant.data.DatabaseManager;
 import com.writingassistant.logging.AppLogger;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
+
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 
 /**
- * Thread-safe in-memory session cache for rewritten passages with SQLite persistence.
+ * Thread-safe in-memory session cache for rewritten passages.
  * Prevents redundant API calls for identical text and mode requests.
  */
 public class RewriteCache {
@@ -20,15 +18,14 @@ public class RewriteCache {
     private static final int MAX_CACHE_ENTRIES = 500;
 
     private final Map<String, RewriteResult> memoryCache;
-    private final DatabaseManager databaseManager;
+
 
     public RewriteCache() {
         this(null);
     }
 
     public RewriteCache(DatabaseManager databaseManager) {
-        this.databaseManager = databaseManager;
-        // LinkedHashMap based LRU cache protected by ConcurrentHashMap or synchronized access
+        // Retain the legacy constructor; only accepted rewrites belong in document history.
         this.memoryCache = Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<String, RewriteResult> eldest) {
@@ -64,7 +61,7 @@ public class RewriteCache {
     }
 
     /**
-     * Caches a RewriteResult and persists to SQLite history.
+     * Caches generated alternatives without recording an unchosen rewrite in document history.
      */
     public void put(String text, RewriteMode mode, RewriteResult result) {
         if (text == null || result == null) {
@@ -73,25 +70,8 @@ public class RewriteCache {
         String key = generateKey(text, mode);
         memoryCache.put(key, result);
 
-        // Asynchronously persist to SQLite database if databaseManager is present
-        if (databaseManager != null && !result.getAlternatives().isEmpty()) {
-            persistHistory(text, mode, result);
-        }
     }
 
-    private void persistHistory(String originalText, RewriteMode mode, RewriteResult result) {
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(
-                     "INSERT INTO rewrite_history (id, original_text, mode, result_text, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)")) {
-            stmt.setString(1, UUID.randomUUID().toString());
-            stmt.setString(2, originalText);
-            stmt.setString(3, mode.name());
-            stmt.setString(4, String.join(" || ", result.getAlternatives()));
-            stmt.executeUpdate();
-        } catch (Exception e) {
-            LOGGER.log(Level.FINE, "Could not persist rewrite to database history: " + e.getMessage());
-        }
-    }
 
     public boolean contains(String text, RewriteMode mode) {
         return memoryCache.containsKey(generateKey(text, mode));

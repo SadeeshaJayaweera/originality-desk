@@ -21,7 +21,12 @@ class GeminiConnectivityTest {
 
     @BeforeEach
     void setUp() {
-        unconfiguredManager = new ConfigManager(tempDir);
+        unconfiguredManager = new ConfigManager(tempDir) {
+            @Override
+            public String getEffectiveApiKey() {
+                return null;
+            }
+        };
         AppConfig config = unconfiguredManager.getConfig();
         config.setGeminiApiKey(null);
         unconfiguredManager.saveConfig();
@@ -30,39 +35,24 @@ class GeminiConnectivityTest {
     @Test
     @DisplayName("App does not crash when no Gemini API key is configured")
     void testWhenNoKeyConfigured_doesNotCrashAndReportsUnavailable() {
-        // Instantiate GeminiClient with an unconfigured manager (no API key)
+        // The fixture disables environment-key lookup, so this remains offline on developer machines too.
         GeminiClient client = new GeminiClient(unconfiguredManager);
-
-        // If environment variable happens to be set on the host machine, clear it logically for this specific test
-        if (!client.isConfigured()) {
-            assertFalse(client.isConfigured(), "AI should be reported as unconfigured when no key is present");
-
-            // Test connection check should not throw any exception
-            GeminiStatus status = assertDoesNotThrow(client::testConnection,
-                    "testConnection() should handle missing key gracefully without throwing");
-
-            assertNotNull(status, "Status object must not be null");
-            assertFalse(status.isAvailable(), "AI status should be unavailable");
-            assertTrue(status.getMessage().contains("Gemini API key is not configured"),
-                    "Status message should clearly explain missing key: " + status.getMessage());
-
-            // Attempting text generation without a key throws a well-defined GeminiException rather than crashing
-            GeminiException exception = assertThrows(GeminiException.class, () -> client.generateText("Test prompt"),
-                    "generateText() should throw GeminiException when key is missing");
-            assertTrue(exception.getMessage().contains("Gemini API key is not configured"));
-        } else {
-            // Environment variable was set on host; verify client can inspect status safely
-            GeminiStatus status = assertDoesNotThrow(client::testConnection);
-            assertNotNull(status);
-        }
+        assertFalse(client.isConfigured());
+        GeminiStatus status = assertDoesNotThrow(client::testConnection);
+        assertNotNull(status);
+        assertFalse(status.isAvailable());
+        assertTrue(status.getMessage().contains("Gemini API key is not configured"));
+        GeminiException exception = assertThrows(AiFeatureUnavailableException.class,
+                () -> client.generateText("Test prompt"));
+        assertTrue(exception.getMessage().contains("Gemini API key is not configured"));
     }
 
     @Test
     @DisplayName("Smoke test: Real Gemini API call succeeds when key is configured")
     void testWhenKeyIsConfigured_realApiCallSucceeds() {
-        String envKey = System.getenv("GEMINI_API_KEY");
-        String configKey = ConfigManager.getInstance().getEffectiveApiKey();
-        String effectiveKey = (configKey != null && !configKey.isBlank()) ? configKey : envKey;
+        assumeTrue(Boolean.getBoolean("writingassistant.liveTests"),
+                "Live Gemini calls require -Dwritingassistant.liveTests=true (network access and API usage charges).");
+        String effectiveKey = System.getenv("GEMINI_API_KEY");
 
         // Gracefully skip live test if no real key is present in current test environment
         assumeTrue(effectiveKey != null && !effectiveKey.isBlank(),
@@ -70,6 +60,7 @@ class GeminiConnectivityTest {
 
         ConfigManager liveConfigManager = new ConfigManager(tempDir);
         liveConfigManager.getConfig().setGeminiApiKey(effectiveKey);
+        liveConfigManager.getConfig().setOfflineMode(false);
         liveConfigManager.saveConfig();
 
         GeminiClient client = new GeminiClient(liveConfigManager);

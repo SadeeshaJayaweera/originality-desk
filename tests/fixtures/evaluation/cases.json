@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "name": "synthetic-source-review-v1",
+  "provenance": "Coding-assistant-authored synthetic examples with explicitly enumerated, human-reviewable policy labels and rationales. Labels are not inferred from engine output. No independent human adjudication, external research corpus or AI-authorship evaluation dataset is available.",
+  "labelPolicy": "POSITIVE queues intentionally copied prose, quotations and constructed meaning-preserving paraphrases for a hypothetical review policy. NEGATIVE excludes unrelated prose, stock boilerplate and bibliography-only overlap, and deliberately treats technical vocabulary lists and contradictory claims as nonmatching content. A contradictory claim can still contain genuine lexical overlap: a policy FP does not imply fabricated evidence. These are illustrative policy judgments, not plagiarism, scientific accuracy or authorship ground truth. Labels do not change by profile.",
+  "cases": [
+    {
+      "id": "exact-full", "category": "exact", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "The submitted prose is an intentional verbatim copy of the supplied source.",
+      "submittedText": "Researchers measured coastal rainfall using calibrated sensors during winter storms across northern valleys and archived the hourly observations.",
+      "sources": [{"id": "weather", "title": "Synthetic rainfall observations", "type": "SYNTHETIC", "text": "Researchers measured coastal rainfall using calibrated sensors during winter storms across northern valleys and archived the hourly observations."}]
+    },
+    {
+      "id": "exact-excerpt-distractor", "category": "exact", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "An original introduction surrounds a copied source sentence; a second source is unrelated.",
+      "submittedText": "This classroom exercise considers several practical questions. Alpine researchers installed temperature sensors beside three glaciers before collecting hourly measurements throughout the summer monitoring period. The example concludes with an original observation about presentation.",
+      "sources": [
+        {"id": "glaciers", "title": "Synthetic alpine field notes", "type": "SYNTHETIC", "text": "Alpine researchers installed temperature sensors beside three glaciers before collecting hourly measurements throughout the summer monitoring period."},
+        {"id": "music", "title": "Synthetic rehearsal notes", "type": "SYNTHETIC", "text": "The string quartet rehearsed a quiet passage before the conductor changed the tempo and requested a softer ending."}
+      ]
+    },
+    {
+      "id": "exact-unicode", "category": "exact", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "Compatibility ligatures, a soft hyphen and whitespace changes preserve the intentionally copied words.",
+      "submittedText": "😀 The oﬃce co­operates with elite research teams across northern regions during the annual ﬁeld survey.",
+      "sources": [{"id": "office", "title": "Synthetic field coordination", "type": "SYNTHETIC", "text": "The office cooperates with elite research teams across northern regions during the annual field survey."}]
+    },
+    {
+      "id": "exact-two-source-identities", "category": "exact", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "The same copied passage exists in two supplied source identities; this is one binary case, not two successes.",
+      "submittedText": "Botanical researchers catalogued native seedlings across six shaded plots before comparing survival rates after the prolonged seasonal drought.",
+      "sources": [
+        {"id": "archive-a", "title": "Synthetic shared title", "type": "SYNTHETIC_ARCHIVE", "text": "Botanical researchers catalogued native seedlings across six shaded plots before comparing survival rates after the prolonged seasonal drought."},
+        {"id": "archive-b", "title": "Synthetic shared title", "type": "SYNTHETIC_LIBRARY", "text": "Botanical researchers catalogued native seedlings across six shaded plots before comparing survival rates after the prolonged seasonal drought."}
+      ]
+    },
+    {
+      "id": "minor-one-substitution", "category": "minor_substitution", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "One content word was manually substituted in deliberately borrowed prose.",
+      "submittedText": "Researchers measured coastal rainfall using portable sensors during winter storms across northern valleys and archived hourly observations.",
+      "sources": [{"id": "weather", "title": "Synthetic sensor study", "type": "SYNTHETIC", "text": "Researchers measured coastal rainfall using calibrated sensors during winter storms across northern valleys and archived hourly observations."}]
+    },
+    {
+      "id": "minor-two-substitutions", "category": "minor_substitution", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "Two distributed substitutions preserve the intentional source dependence.",
+      "submittedText": "Botanical researchers counted native seedlings across six sheltered plots before comparing survival rates after the prolonged seasonal drought.",
+      "sources": [{"id": "seedlings", "title": "Synthetic seedling study", "type": "SYNTHETIC", "text": "Botanical researchers catalogued native seedlings across six shaded plots before comparing survival rates after the prolonged seasonal drought."}]
+    },
+    {
+      "id": "reordered-sentences", "category": "reordered", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "Two intentionally copied sentences appear in the opposite order.",
+      "submittedText": "Laboratory technicians stored every collected sample inside sealed containers before beginning the scheduled chemical analysis. Field researchers recorded river temperatures beside several bridges throughout the unusually dry summer monitoring period.",
+      "sources": [{"id": "river", "title": "Synthetic river protocol", "type": "SYNTHETIC", "text": "Field researchers recorded river temperatures beside several bridges throughout the unusually dry summer monitoring period. Laboratory technicians stored every collected sample inside sealed containers before beginning the scheduled chemical analysis."}]
+    },
+    {
+      "id": "reordered-content-words", "category": "reordered", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "The same source content words are deliberately reordered without an eight-word run.",
+      "submittedText": "During winter storms researchers measured rainfall across northern coastal valleys using calibrated sensors.",
+      "sources": [{"id": "weather", "title": "Synthetic winter monitoring", "type": "SYNTHETIC", "text": "Researchers measured coastal rainfall using calibrated sensors during winter storms across northern valleys."}]
+    },
+    {
+      "id": "lexical-paraphrase-passive", "category": "lexical_paraphrase", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "An intentionally source-derived passive construction retains much of the source vocabulary.",
+      "submittedText": "Hourly rainfall observations were collected by coastal researchers using calibrated sensors throughout winter storms in northern valleys.",
+      "sources": [{"id": "weather", "title": "Synthetic rainfall collection", "type": "SYNTHETIC", "text": "Coastal researchers collected hourly rainfall observations using calibrated sensors throughout winter storms in northern valleys."}]
+    },
+    {
+      "id": "lexical-paraphrase-rephrased", "category": "lexical_paraphrase", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "A manually rephrased borrowed sentence shares most distinctive content words but changes their order.",
+      "submittedText": "Across shaded plots botanical researchers compared drought survival among native seedlings after recording initial heights.",
+      "sources": [{"id": "seedlings", "title": "Synthetic drought experiment", "type": "SYNTHETIC", "text": "Botanical researchers recorded initial heights of native seedlings in shaded plots before comparing survival after drought."}]
+    },
+    {
+      "id": "quote-with-citation", "category": "quotes", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "A cited verbatim quote remains positive overlap evidence; the label does not allege misconduct or validate the citation.",
+      "submittedText": "As an illustrative citation, “Alpine researchers installed temperature sensors beside three glaciers before collecting hourly measurements throughout the summer monitoring period” (Example, 2024).",
+      "sources": [{"id": "glaciers", "title": "Synthetic quoted passage", "type": "SYNTHETIC", "text": "Alpine researchers installed temperature sensors beside three glaciers before collecting hourly measurements throughout the summer monitoring period."}]
+    },
+    {
+      "id": "quote-without-citation", "category": "quotes", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "Quotation marks alone do not remove intentionally copied source evidence.",
+      "submittedText": "The example states: \"Botanical researchers catalogued native seedlings across six shaded plots before comparing survival rates after the prolonged seasonal drought.\"",
+      "sources": [{"id": "seedlings", "title": "Synthetic uncited quotation", "type": "SYNTHETIC", "text": "Botanical researchers catalogued native seedlings across six shaded plots before comparing survival rates after the prolonged seasonal drought."}]
+    },
+    {
+      "id": "short-six-content-words", "category": "short", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "Six intentionally copied distinctive words exercise profile-specific length limits.",
+      "submittedText": "Glacial sediments preserve ancient volcanic minerals",
+      "sources": [{"id": "sediment", "title": "Synthetic short geology note", "type": "SYNTHETIC", "text": "Glacial sediments preserve ancient volcanic minerals"}]
+    },
+    {
+      "id": "short-eight-content-words", "category": "short", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "Eight intentionally copied words meet STANDARD but not QUICK exact-shingle length.",
+      "submittedText": "Glacial sediments preserve ancient volcanic minerals beneath frozen",
+      "sources": [{"id": "sediment", "title": "Synthetic eight-word fragment", "type": "SYNTHETIC", "text": "Glacial sediments preserve ancient volcanic minerals beneath frozen"}]
+    },
+    {
+      "id": "short-eleven-content-words", "category": "short", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "An eleven-word copied fragment falls just below QUICK exact-shingle length.",
+      "submittedText": "Glacial sediments preserve ancient volcanic minerals beneath frozen alpine drainage channels",
+      "sources": [{"id": "sediment", "title": "Synthetic eleven-word fragment", "type": "SYNTHETIC", "text": "Glacial sediments preserve ancient volcanic minerals beneath frozen alpine drainage channels"}]
+    },
+    {
+      "id": "short-five-content-words", "category": "short", "cohort": "PRIMARY", "label": "POSITIVE",
+      "rationale": "Five intentionally copied distinctive words are below every supported exact and near window length; a miss is an explicit limitation.",
+      "submittedText": "Glacial sediments preserve volcanic minerals",
+      "sources": [{"id": "sediment", "title": "Synthetic five-word fragment", "type": "SYNTHETIC", "text": "Glacial sediments preserve volcanic minerals"}]
+    },
+    {
+      "id": "semantic-synonym-heavy", "category": "semantic_paraphrase", "cohort": "SEMANTIC_CHALLENGE", "label": "POSITIVE",
+      "rationale": "Deliberately constructed conceptual borrowing replaces nearly all vocabulary. This is an out-of-capability challenge, not evidence that semantic matching exists.",
+      "submittedText": "Greater warmth caused the frozen mass to shrink sooner.",
+      "sources": [{"id": "ice", "title": "Synthetic conceptual source", "type": "SYNTHETIC", "text": "Rising temperatures accelerated the melting of the glacier."}]
+    },
+    {
+      "id": "semantic-concept-recast", "category": "semantic_paraphrase", "cohort": "SEMANTIC_CHALLENGE", "label": "POSITIVE",
+      "rationale": "A manually constructed restatement retains the idea but almost none of the source words. The engine has no embeddings or semantic model.",
+      "submittedText": "When staff can decide their own hours, fewer people leave their jobs.",
+      "sources": [{"id": "work", "title": "Synthetic workplace concept", "type": "SYNTHETIC", "text": "Flexible scheduling improves employee retention."}]
+    },
+    {
+      "id": "boilerplate-rights", "category": "boilerplate", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "A stock rights notice is excluded from the illustrative source-review target despite literal sharing.",
+      "submittedText": "All rights reserved no part of this publication may be reproduced without permission",
+      "sources": [{"id": "notice", "title": "Synthetic stock rights notice", "type": "SYNTHETIC", "text": "All rights reserved no part of this publication may be reproduced without permission"}]
+    },
+    {
+      "id": "boilerplate-disclaimer", "category": "boilerplate", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "Generic disclaimer language is not substantive source-dependent prose under this policy.",
+      "submittedText": "This material is provided for informational purposes only and does not constitute professional advice",
+      "sources": [{"id": "notice", "title": "Synthetic disclaimer", "type": "SYNTHETIC", "text": "This material is provided for informational purposes only and does not constitute professional advice"}]
+    },
+    {
+      "id": "boilerplate-low-information", "category": "boilerplate", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "A sequence of common function words is intentionally low-information, not source-dependent prose.",
+      "submittedText": "the and of in the and of in the and of in the and of in",
+      "sources": [{"id": "stock", "title": "Synthetic function-word sequence", "type": "SYNTHETIC", "text": "the and of in the and of in the and of in the and of in"}]
+    },
+    {
+      "id": "bibliography-shared-entry", "category": "bibliography", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "Only an invented bibliographic entry is shared; the prose topics are unrelated. This policy label is fixed across profiles.",
+      "submittedText": "This essay discusses orchestral rhythm and rehearsal choices.\nReferences\nExample Researcher Coastal Rainfall Monitoring Across Northern Valleys During Winter Storms Synthetic Journal Volume Seven Pages Forty Fifty 2024",
+      "sources": [{"id": "bibliography", "title": "Synthetic bibliography comparison", "type": "SYNTHETIC", "text": "A separate report describes sediment transport near mountain streams.\nReferences\nExample Researcher Coastal Rainfall Monitoring Across Northern Valleys During Winter Storms Synthetic Journal Volume Seven Pages Forty Fifty 2024"}]
+    },
+    {
+      "id": "bibliography-only", "category": "bibliography", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "The submission consists solely of an invented reference list, excluded by the review-policy target.",
+      "submittedText": "Works Cited\nExample Botanist Native Seedling Survival Across Shaded Research Plots Following Seasonal Drought Synthetic Botanical Review Volume Nine 2023",
+      "sources": [{"id": "bibliography", "title": "Synthetic invented reference", "type": "SYNTHETIC", "text": "Works Cited\nExample Botanist Native Seedling Survival Across Shaded Research Plots Following Seasonal Drought Synthetic Botanical Review Volume Nine 2023"}]
+    },
+    {
+      "id": "technical-shared-vocabulary", "category": "technical", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "A deliberately permuted technical vocabulary list has no source-dependent proposition under the policy; lexical set matching may flag it.",
+      "submittedText": "Transactions snapshots indexes storage replication consistency latency throughput partitions queries caching durability.",
+      "sources": [{"id": "database", "title": "Synthetic technical glossary", "type": "SYNTHETIC", "text": "Durability caching queries partitions throughput latency consistency replication storage indexes snapshots transactions."}]
+    },
+    {
+      "id": "technical-negated-claim", "category": "technical", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "The constructed synthetic claim negates the source conclusion. The content-level review policy labels it negative despite genuine shared wording, deliberately exposing the difference between lexical evidence and meaning-aware judgment.",
+      "submittedText": "The treatment does not improve systolic blood pressure among adults enrolled during the twelve month observational monitoring period.",
+      "sources": [{"id": "clinical", "title": "Synthetic opposing clinical claim", "type": "SYNTHETIC", "text": "The treatment improves systolic blood pressure among adults enrolled during the twelve month observational monitoring period."}]
+    },
+    {
+      "id": "technical-different-procedure", "category": "technical", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "Two invented laboratory instructions share a topic and terms but prescribe different procedures; labels are policy judgments, not proof of independent authorship.",
+      "submittedText": "Laboratory technicians cooled sealed water samples before measuring mineral concentrations with optical sensors.",
+      "sources": [{"id": "lab", "title": "Synthetic alternative laboratory procedure", "type": "SYNTHETIC", "text": "Laboratory technicians heated open soil samples before estimating organic content with chemical reagents."}]
+    },
+    {
+      "id": "unrelated-geology-music", "category": "unrelated", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "The synthetic geology and music passages share no intentionally borrowed prose.",
+      "submittedText": "Volcanic ash layers reveal repeated eruptions beneath the ancient coastal plateau and preserve fragments of mineral crystals.",
+      "sources": [{"id": "music", "title": "Synthetic orchestral rehearsal", "type": "SYNTHETIC", "text": "The orchestra rehearsed a lively opening before the conductor requested slower phrasing from the woodwind section."}]
+    },
+    {
+      "id": "unrelated-clinic-architecture", "category": "unrelated", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "Distinct synthetic medical and architectural descriptions contain no intended source dependence.",
+      "submittedText": "Nurses recorded patient symptoms every morning while physicians adjusted the prescribed dosage after reviewing blood tests.",
+      "sources": [{"id": "building", "title": "Synthetic architectural notes", "type": "SYNTHETIC", "text": "The renovated library combines narrow stone arches with a broad timber roof above the central reading room."}]
+    },
+    {
+      "id": "unrelated-identical-title", "category": "unrelated", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "Source titles are metadata, not matching evidence; the text remains unrelated.",
+      "submittedText": "Marine biologists surveyed coral reefs beside tropical islands during a sequence of carefully planned summer expeditions.",
+      "sources": [{"id": "software", "title": "unrelated-identical-title", "type": "SYNTHETIC", "text": "Software engineers implemented immutable database transactions with deterministic event logging and durable recovery snapshots."}]
+    },
+    {
+      "id": "short-common-fragment", "category": "short", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "A five-word generic transition is below the policy's substantive source-review target.",
+      "submittedText": "as shown in this example",
+      "sources": [{"id": "transition", "title": "Synthetic generic transition", "type": "SYNTHETIC", "text": "as shown in this example"}]
+    },
+    {
+      "id": "boilerplate-terms", "category": "boilerplate", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "A stock terms-and-conditions instruction is excluded from substantive source review.",
+      "submittedText": "Please read the terms and conditions carefully before using this service or creating a new account",
+      "sources": [{"id": "notice", "title": "Synthetic service notice", "type": "SYNTHETIC", "text": "Please read the terms and conditions carefully before using this service or creating a new account"}]
+    },
+    {
+      "id": "unrelated-same-topic", "category": "unrelated", "cohort": "PRIMARY", "label": "NEGATIVE",
+      "rationale": "Both passages concern weather but make unrelated observations without intentionally borrowed phrasing.",
+      "submittedText": "Evening thunderstorms disrupted several ferry routes along the southern coast while residents secured loose equipment outside their homes.",
+      "sources": [{"id": "weather", "title": "Synthetic unrelated weather report", "type": "SYNTHETIC", "text": "Mountain snowfall increased during January and supplied additional meltwater to upland reservoirs when spring temperatures arrived."}]
+    }
+  ]
+}

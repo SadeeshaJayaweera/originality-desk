@@ -6,3 +6,15 @@ target/
 *.db
 *.log
 dependency-reduced-pom.xml
+
+# Runtime server storage and local artifacts
+desk-server-data/
+*.sqlite3*
+*.lock
+.env
+.writing-assistant/
+
+# Explicitly track project documentation even if global gitignore ignores docs
+!docs/
+!docs/**
+

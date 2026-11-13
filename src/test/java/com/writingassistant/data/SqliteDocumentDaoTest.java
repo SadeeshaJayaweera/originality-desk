@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.nio.file.Files;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
@@ -98,6 +101,80 @@ class SqliteDocumentDaoTest {
         List<SourceQuote> remaining = documentDao.getCitationsForDocument(doc.getId());
         assertEquals(1, remaining.size());
         assertEquals("Ashish Vaswani", remaining.get(0).getAuthor());
+    }
+
+    @Test
+    void unlinkingLastSourcePreservesSharedLibraryAndOtherDocuments() throws SQLException {
+        DocumentRecord first = new DocumentRecord("First", null);
+        DocumentRecord second = new DocumentRecord("Second", null);
+        documentDao.save(first);
+        documentDao.save(second);
+        SourceQuote shared = new SourceQuote("Shared quote", "Author", "2024", "Shared title", null, null, null, SourceType.BOOK);
+        citationLibrary.save(shared);
+        documentDao.linkCitation(first.getId(), shared.getId());
+        documentDao.linkCitation(second.getId(), shared.getId());
+
+        documentDao.unlinkCitation(first.getId(), shared.getId());
+
+        assertTrue(documentDao.getCitationsForDocument(first.getId()).isEmpty());
+        assertEquals(1, documentDao.getCitationsForDocument(second.getId()).size());
+        assertTrue(citationLibrary.findSourceById(shared.getId()).isPresent());
+        assertEquals(1, citationLibrary.count());
+        assertTrue(CitationLibrary.generateBibliography(documentDao.getCitationsForDocument(first.getId()),
+                com.writingassistant.core.citation.CitationStyle.APA).isEmpty());
+    }
+
+    @Test
+    void deletingDocumentRemovesOnlyItsDerivedRowsAndNeverItsFile(@TempDir Path tempDir) throws Exception {
+        Path externalFile = tempDir.resolve("original.docx");
+        Files.writeString(externalFile, "source file must survive");
+        DocumentRecord first = new DocumentRecord("First", externalFile.toString());
+        DocumentRecord second = new DocumentRecord("Second", externalFile.toString());
+        documentDao.save(first);
+        documentDao.save(second);
+        SourceQuote shared = new SourceQuote("Quote", "Author", "2024", "Title", null, null, null, SourceType.BOOK);
+        citationLibrary.save(shared);
+        documentDao.linkCitation(first.getId(), shared.getId());
+        documentDao.linkCitation(second.getId(), shared.getId());
+        documentDao.logRewrite(new RewriteHistoryEntry(first.getId(), "first original", "CLARITY", "first choice"));
+        documentDao.logRewrite(new RewriteHistoryEntry(second.getId(), "second original", "CLARITY", "second choice"));
+        documentDao.logRewrite(new RewriteHistoryEntry(null, "unattached original", "CLARITY", "unattached choice"));
+
+        documentDao.deleteById(first.getId());
+
+        assertTrue(documentDao.findById(first.getId()).isEmpty());
+        assertTrue(documentDao.getRewriteHistory(first.getId()).isEmpty());
+        assertTrue(documentDao.getCitationsForDocument(first.getId()).isEmpty());
+        assertTrue(documentDao.findById(second.getId()).isPresent());
+        assertEquals(1, documentDao.getRewriteHistory(second.getId()).size());
+        assertEquals(1, documentDao.getCitationsForDocument(second.getId()).size());
+        assertEquals(2, documentDao.getRewriteHistory(null).size());
+        assertEquals(1, citationLibrary.count());
+        assertEquals("source file must survive", Files.readString(externalFile));
+        try (Connection conn = dbManager.getConnection(); Statement stmt = conn.createStatement();
+             var rs = stmt.executeQuery("PRAGMA foreign_key_check")) {
+            assertFalse(rs.next());
+        }
+    }
+
+    @Test
+    void failedDocumentDeleteRollsBackHistoryAndLinks() throws Exception {
+        DocumentRecord doc = new DocumentRecord("Keep me", null);
+        documentDao.save(doc);
+        SourceQuote source = new SourceQuote("Quote", "Author", "2024", "Title", null, null, null, SourceType.BOOK);
+        citationLibrary.save(source);
+        documentDao.linkCitation(doc.getId(), source.getId());
+        documentDao.logRewrite(new RewriteHistoryEntry(doc.getId(), "original", "CLARITY", "choice"));
+        try (Connection conn = dbManager.getConnection(); Statement stmt = conn.createStatement()) {
+            stmt.execute("CREATE TRIGGER reject_document_delete BEFORE DELETE ON documents "
+                    + "BEGIN SELECT RAISE(ABORT, 'test failure'); END");
+        }
+
+        assertThrows(SQLException.class, () -> documentDao.deleteById(doc.getId()));
+
+        assertTrue(documentDao.findById(doc.getId()).isPresent());
+        assertEquals(1, documentDao.getCitationsForDocument(doc.getId()).size());
+        assertEquals(1, documentDao.getRewriteHistory(doc.getId()).size());
     }
 
     @Test

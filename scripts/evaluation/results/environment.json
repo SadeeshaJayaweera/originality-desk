@@ -1,0 +1,38 @@
+{
+  "startedUtc": "2026-11-12T21:57:50.380088+00:00",
+  "finishedUtc": "2026-11-12T21:57:52.780399+00:00",
+  "platform": "macOS-15.8.3-x86_64-i386-64bit",
+  "operatingSystemVersion": "15.8.3",
+  "cpuModel": "Intel(R) Core(TM) i7-8850H CPU @ 2.60GHz",
+  "logicalCpuCount": 12,
+  "physicalMemoryBytes": "17179869184",
+  "pythonVersion": "3.11.4",
+  "javaVersion": "openjdk version \"21.0.10\" 2026-01-20\nOpenJDK Runtime Environment Homebrew (build 21.0.10)\nOpenJDK 64-Bit Server VM Homebrew (build 21.0.10, mixed mode, sharing)",
+  "javacVersion": "javac 21.0.10",
+  "mavenVersion": "Apache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)\nMaven home: /Users/macboookpro/apache-maven-3.9.6\nJava version: 21.0.10, vendor: Homebrew, runtime: /usr/local/Cellar/openjdk@21/21.0.10/libexec/openjdk.jdk/Contents/Home\nDefault locale: en_LK, platform encoding: UTF-8\nOS name: \"mac os x\", version: \"15.8.3\", arch: \"x86_64\", family: \"mac\"",
+  "gitRevision": "ab8cac5351ac9795a341486276643f64a82a3ba2",
+  "gitDirty": true,
+  "applicationJar": "target/writing-assistant-1.0.0-SNAPSHOT.jar",
+  "applicationJarSha256": "926c9bc42cb33b1ea8de672369178f82e6688b99175aa2cfc9c1a47f8c1867d4",
+  "analysisClassesSha256": "3d116da37862b93b9e367ed91ac720c1a3fc91075484842ca5673786e2e0e276",
+  "fixtureSha256": "0fffe9ab01158bd662906de91e9aa9f7faaef02084aa3c4cd9f9b498591614b5",
+  "runnerSha256": "57618b71fa6fbf80ee25717c5da82204b6819cdee0e17651a53cb6c11ef328c2",
+  "buildRequested": true,
+  "offlineBuild": true,
+  "command": [
+    "python3",
+    "scripts/evaluation/run.py",
+    "--warmup",
+    "10",
+    "--iterations",
+    "30",
+    "--output",
+    "scripts/evaluation/results",
+    "--offline"
+  ],
+  "artifactSha256": {
+    "report.json": "c6912905091095b504228dee5b3cdd8203bafe5974c1486dbd868074270e8cb3",
+    "case-results.csv": "4308c01533468fc4bf50f3d01a0f3657e35ba7d55516895551d6e31f21a1e31d",
+    "timings.csv": "4ba8e513beeded9c3514bc2d696223ad0d348a6da1f28d9c064c0b334960c84d"
+  }
+}

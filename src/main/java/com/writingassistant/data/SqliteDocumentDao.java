@@ -111,11 +111,28 @@ public class SqliteDocumentDao implements DocumentDao {
             return;
         }
 
-        String sql = "DELETE FROM documents WHERE id = ?";
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            stmt.executeUpdate();
+        try (Connection conn = databaseManager.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Explicit cleanup also supports legacy tables created without cascading foreign keys.
+                for (String sql : List.of(
+                        "DELETE FROM rewrite_history WHERE document_id = ?",
+                        "DELETE FROM document_citations WHERE document_id = ?",
+                        "DELETE FROM documents WHERE id = ?")) {
+                    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        stmt.setString(1, id);
+                        stmt.executeUpdate();
+                    }
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
+            }
             LOGGER.fine("Deleted document record: " + id);
         }
     }

@@ -135,6 +135,54 @@ class DefaultSimilarityCheckerTest {
     }
 
     @Test
+    void spansPreserveLeadingWhitespaceAndUnicodeOffsets() {
+        String source = "The café serves excellent coffee daily";
+        String candidate = " \t\n\u2003🙂 The café serves excellent coffee daily.  \n";
+        SimilarityReport report = checker.checkSimilarity(source, candidate);
+        assertFalse(report.getMatchedSpans().isEmpty());
+        MatchedSpan span = report.getMatchedSpans().get(0);
+        assertEquals(candidate.indexOf("The"), span.getStartIndex());
+        assertEquals("The café serves excellent coffee daily", span.getMatchedText());
+        for (MatchedSpan match : report.getMatchedSpans()) {
+            assertEquals(match.getMatchedText(), candidate.substring(match.getStartIndex(), match.getEndIndex()));
+        }
+    }
+
+    @Test
+    void oversizedPassagesAndDirectAlgorithmCallsAreRejectedBeforeQuadraticWork() {
+        String oversized = "a".repeat(DefaultSimilarityChecker.MAX_TEXT_CHARS + 1);
+        assertThrows(IllegalArgumentException.class, () -> checker.checkSimilarity(oversized, "short"));
+        assertThrows(IllegalArgumentException.class, () -> checker.checkSimilarity("short", oversized));
+        assertThrows(IllegalArgumentException.class, () -> checker.computeLevenshteinSimilarity(oversized, oversized));
+        List<String> tooManyWords = java.util.Collections.nCopies(DefaultSimilarityChecker.MAX_WORDS + 1, "a");
+        assertThrows(IllegalArgumentException.class, () -> checker.computeLcsRatio(tooManyWords, tooManyWords));
+        assertThrows(IllegalArgumentException.class, () -> checker.computeAverageNGramOverlap(tooManyWords, List.of("a")));
+        assertThrows(IllegalArgumentException.class, () -> checker.checkSimilarity("a ".repeat(1001), "a"));
+        assertThrows(IllegalArgumentException.class, () -> checker.computeSingleNGramOverlap(List.of("a"), List.of("a"), 0));
+    }
+
+    @Test
+    void similarityConfigurationRejectsInvalidNumbersRangesAndWeights() {
+        for (double invalid : new double[] {Double.NaN, Double.POSITIVE_INFINITY, -0.1, 1.1}) {
+            assertThrows(IllegalArgumentException.class, () -> checker.getConfig().setWeightNGram(invalid));
+            assertThrows(IllegalArgumentException.class, () -> new SimilarityConfig(invalid, 0.4, 0.25, 25, 55));
+        }
+        assertThrows(IllegalArgumentException.class, () -> new SimilarityConfig(0, 0, 0, 25, 55));
+        assertThrows(IllegalArgumentException.class, () -> new SimilarityConfig(0.35, 0.4, 0.25, 55, 25));
+        assertThrows(IllegalArgumentException.class, () -> new SimilarityConfig(0.35, 0.4, 0.25, 25, 101));
+        assertThrows(IllegalArgumentException.class, () -> new SimilarityConfig(0.35, 0.4, 0.25, Double.NaN, 55));
+        assertThrows(IllegalArgumentException.class, () -> checker.getConfig().setModerateThreshold(-1));
+        assertThrows(IllegalArgumentException.class, () -> checker.getConfig().setHighThreshold(25));
+        assertThrows(IllegalArgumentException.class, () -> checker.getConfig().setMinSpanWords(0));
+        assertThrows(IllegalArgumentException.class, () -> checker.getConfig().setMinSpanWords(101));
+        assertThrows(IllegalArgumentException.class, () -> checker.getConfig().setMinNGramSize(0));
+        assertThrows(IllegalArgumentException.class, () -> checker.getConfig().setMaxNGramSize(1));
+        assertThrows(IllegalArgumentException.class, () -> checker.getConfig().setMaxNGramSize(Integer.MAX_VALUE));
+        checker.getConfig().setWeightNGram(0.1);
+        assertThrows(IllegalArgumentException.class, () -> checker.checkSimilarity("some words", "some words"));
+    }
+
+    @Test
     @DisplayName("Handles empty, blank, and null inputs gracefully without crashing")
     void testEdgeCases() {
         SimilarityReport r1 = checker.checkSimilarity("", "");

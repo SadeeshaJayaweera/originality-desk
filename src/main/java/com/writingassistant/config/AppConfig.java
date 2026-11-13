@@ -6,6 +6,7 @@ package com.writingassistant.config;
 public class AppConfig {
 
     private String geminiApiKey;
+    private boolean offlineMode;
     private String geminiModel = "gemini-1.5-flash";
     private String defaultCitationStyle = "APA";
     private String defaultRewriteMode = "CLARITY";
@@ -29,6 +30,14 @@ public class AppConfig {
         if (defaultCitationStyle != null && !defaultCitationStyle.isBlank()) {
             this.defaultCitationStyle = defaultCitationStyle;
         }
+    }
+
+    public boolean isOfflineMode() {
+        return offlineMode;
+    }
+
+    public void setOfflineMode(boolean offlineMode) {
+        this.offlineMode = offlineMode;
     }
 
     public String getGeminiApiKey() {

@@ -10,9 +10,9 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Writing Assistant</name>
-    <description>Desktop writing assistant for AI rewriting, citation-safe quote paraphrasing, and local similarity checking</description>
-    <url>https://github.com/writingassistant/writing-assistant</url>
+    <name>Originality Desk</name>
+    <description>Evidence-based document originality workspace with a preserved desktop writing assistant</description>
+    <url>https://github.com/SadeeshaJayaweera/originality-desk</url>
 
     <organization>
         <name>Writing Assistant Team</name>
@@ -50,6 +50,13 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>${poi.version}</version>
+        </dependency>
+
+        <!-- Local PDF extraction and reproducible report generation -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.5</version>
         </dependency>
 
         <!-- SQLite JDBC (persistence) -->
@@ -106,6 +113,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
+            </plugin>
+
+            <!-- Maven Jar Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
             </plugin>
 
             <!-- JavaFX Maven Plugin -->
