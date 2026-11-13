@@ -13,3 +13,4 @@ public interface AuthOperations {
     void logout(Service.Actor actor, String token) throws Exception;
     Map<String, Object> me(Service.Actor actor) throws Exception;
 }
+

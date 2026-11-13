@@ -305,7 +305,8 @@ public final class Service implements AuthOperations, DocumentOperations, Analys
                 Map<String,Object> row = sql.one("SELECT status,LENGTH(text) AS length FROM documents WHERE workspace_id=? AND id=?", workspace, source);
                 if (row == null) throw ApiException.missing();
                 if (!"READY".equals(row.get("status"))) throw ApiException.conflict("A source is not ready");
-                totalText += ((Number) row.get("length")).longValue();
+                Number lengthNum = (Number) row.get("length");
+                totalText += lengthNum == null ? 0L : lengthNum.longValue();
             }
             if (totalText > MAX_SOURCE_TEXT) throw new ApiException(413, "ANALYSIS_TOO_LARGE", "Source corpus exceeds 1,000,000 UTF-16 characters");
             if (sql.number("SELECT COUNT(*) FROM analyses WHERE workspace_id=?", workspace) >= 2000

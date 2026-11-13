@@ -72,3 +72,4 @@ Originality Desk deploys in-memory fixed-window rate limiters:
 3. **Global Ingress Perimeter**:
    - Capped at **600 requests per minute** per remote IP address.
    - Responds with `HTTP 429 Too Many Requests` and `Retry-After: 60` header upon exhaustion.
+
