@@ -15,6 +15,11 @@ public class DeterministicEmbeddingEngine implements EmbeddingEngine {
     public static final String DEFAULT_MODEL_NAME = "deterministic-minilm-384";
     public static final int DEFAULT_DIMENSIONS = 384;
 
+    private static final java.util.Set<String> STOP_WORDS = java.util.Set.of(
+            "the", "of", "and", "in", "to", "a", "is", "that", "for", "it", "as", "was", "with",
+            "be", "by", "on", "at", "an", "this", "or", "from", "are", "were"
+    );
+
     private final String modelName;
     private final int dimensions;
     private final WordPieceTokenizer tokenizer;
@@ -66,33 +71,43 @@ public class DeterministicEmbeddingEngine implements EmbeddingEngine {
                 continue;
             }
 
+            String lower = token.toLowerCase();
+            boolean isStop = STOP_WORDS.contains(lower);
+            float weight = isStop ? 0.2f : 2.0f;
             long tokenHash = hashString(token);
 
-            // 1-gram token projection
+            // 1-gram token projection with random sign hashing (expectation E[u.v] = 0 for unrelated)
             int idx1 = Math.abs((int) (hash64(tokenHash, 1) % dimensions));
-            vector[idx1] += 2.0f;
+            int sign1 = ((hash64(tokenHash, 99) & 1L) == 0) ? 1 : -1;
+            vector[idx1] += sign1 * weight;
 
             // Bigram transition projection
-            if (prevHash != 0) {
+            if (prevHash != 0 && !isStop) {
                 long bigramHash = (prevHash << 16) ^ tokenHash;
                 int idx2 = Math.abs((int) (hash64(bigramHash, 2) % dimensions));
-                vector[idx2] += 1.5f;
+                int sign2 = ((hash64(bigramHash, 98) & 1L) == 0) ? 1 : -1;
+                vector[idx2] += sign2 * 1.5f;
             }
 
             // Trigram context projection
-            if (prev2Hash != 0) {
+            if (prev2Hash != 0 && !isStop) {
                 long trigramHash = (prev2Hash << 32) ^ (prevHash << 16) ^ tokenHash;
                 int idx3 = Math.abs((int) (hash64(trigramHash, 3) % dimensions));
-                vector[idx3] += 1.0f;
+                int sign3 = ((hash64(trigramHash, 97) & 1L) == 0) ? 1 : -1;
+                vector[idx3] += sign3 * 1.0f;
             }
 
-            // Character 3-gram sub-word morphological projections (fastText approach)
-            String cleanToken = token.startsWith("##") ? token.substring(2) : token;
-            if (cleanToken.length() >= 3) {
-                for (int c = 0; c <= cleanToken.length() - 3; c++) {
-                    String sub = cleanToken.substring(c, c + 3);
-                    int charHash = Math.abs((int) (hash64(hashString(sub), 4) % dimensions));
-                    vector[charHash] += 0.8f;
+            // Character 3-gram sub-word morphological projections for content words
+            if (!isStop) {
+                String cleanToken = token.startsWith("##") ? token.substring(2) : token;
+                if (cleanToken.length() >= 3) {
+                    for (int c = 0; c <= cleanToken.length() - 3; c++) {
+                        String sub = cleanToken.substring(c, c + 3);
+                        long subHash = hashString(sub);
+                        int charIdx = Math.abs((int) (hash64(subHash, 4) % dimensions));
+                        int sign4 = ((hash64(subHash, 96) & 1L) == 0) ? 1 : -1;
+                        vector[charIdx] += sign4 * 1.0f;
+                    }
                 }
             }
 

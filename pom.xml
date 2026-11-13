@@ -99,6 +99,13 @@
             <version>${onnxruntime.version}</version>
         </dependency>
 
+        <!-- PostgreSQL JDBC Driver -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.2</version>
+        </dependency>
+
         <!-- JUnit 5 Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
