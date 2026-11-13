@@ -32,6 +32,14 @@ public final class DocumentExtractor {
         ));
     }
 
+    public DocumentExtractor(OcrEngine ocrEngine, OcrResourceGovernor governor) {
+        this(List.of(
+                new PdfDocumentParser(ocrEngine, governor),
+                new DocxDocumentParser(),
+                new PlainTextDocumentParser()
+        ));
+    }
+
     public DocumentExtractor(List<DocumentParser> parsers) {
         if (parsers == null || parsers.isEmpty()) {
             throw new IllegalArgumentException("At least one DocumentParser is required");
