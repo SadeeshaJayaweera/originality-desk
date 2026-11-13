@@ -146,3 +146,4 @@ All test suites were executed on macOS Darwin (Kernel 24.x) using OpenJDK 17.0.1
 6. **No Standardized Database Migration Framework**: The database schema is applied via direct SQL execution in `V001__server.sql`. A formal migration tool (such as Flyway) is needed for zero-downtime evolution.
 7. **Single Local Filesystem Blob Store**: Uploaded binaries reside on the host filesystem under `desk-server-data/blobs/`. An S3-compatible object storage abstraction is needed for cloud-native deployment.
 8. **Institutional Single Sign-On (SSO)**: The platform currently relies on local PBKDF2 password authentication; OIDC, SAML 2.0, and LTI 1.3 LMS integrations are needed for institutional adoption.
+
