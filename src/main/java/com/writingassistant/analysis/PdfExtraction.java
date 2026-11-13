@@ -39,11 +39,15 @@ final class PdfExtraction {
                     super.processTextPosition(position);
                 }
             };
+            stripper.setSortByPosition(true);
+            stripper.setSpacingTolerance(0.5f);
+            stripper.setAverageCharTolerance(0.3f);
             stripper.setPageStart("");
             stripper.setPageEnd("\f");
             stripper.writeText(pdf, writer);
-            String text = writer.text.toString();
-            if (text.endsWith("\f")) text = text.substring(0, text.length() - 1);
+            String rawText = writer.text.toString();
+            if (rawText.endsWith("\f")) rawText = rawText.substring(0, rawText.length() - 1);
+            String text = normalizeExtractedText(rawText);
             if (text.codePoints().noneMatch(Character::isLetterOrDigit)) {
                 throw new IOException("PDF has no extractable text; OCR is unavailable");
             }
@@ -55,6 +59,31 @@ final class PdfExtraction {
         } catch (RuntimeException e) {
             throw new IOException("Malformed or unsupported PDF", e);
         }
+    }
+
+    /**
+     * Normalizes extracted PDF text to resolve typographic ligatures, soft hyphens,
+     * and zero-width artifacts common in academic typesetting (LaTeX, InDesign).
+     */
+    static String normalizeExtractedText(String text) {
+        if (text == null || text.isEmpty()) return "";
+        return text
+                .replace("\uFB00", "ff")
+                .replace("\uFB01", "fi")
+                .replace("\uFB02", "fl")
+                .replace("\uFB03", "ffi")
+                .replace("\uFB04", "ffl")
+                .replace("\uFB05", "ft")
+                .replace("\uFB06", "st")
+                .replace("\u00AD", "")
+                .replace("\u200B", "")
+                .replace("\u200C", "")
+                .replace("\u200D", "")
+                .replace("\uFEFF", "");
+    }
+
+    static PdfQualityMetrics assessQuality(String text, int pages) {
+        return PdfQualityMetrics.assess(text, pages);
     }
 
     private static void checkStreams(PDDocument pdf) throws IOException {
