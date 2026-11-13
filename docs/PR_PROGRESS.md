@@ -17,7 +17,7 @@ This document tracks the live implementation status of the 40 individual Pull Re
 
 | Total PRs | Completed / Ready | In Progress | Blocked | Not Started |
 |---|---|---|---|---|
-| **40** | **7** | **0** | **0** | **33** |
+| **40** | **8** | **0** | **0** | **32** |
 
 ---
 
@@ -32,7 +32,7 @@ This document tracks the live implementation status of the 40 individual Pull Re
 | **05** | Authentication and Session Security Review | `feature/pr-05-auth-session-security` | `READY_FOR_REVIEW` | `mvn test -Dtest=ServerSecurityTest` | 100% Pass (11/11 tests) | `Security.java`, `ServerSecurityTest.java`, `docs/SECURITY.md` | PBKDF2 hardening, hash tamper safety, session entropy audit |
 | **06** | Authorisation and Tenant Isolation | `feature/pr-06-authorisation-tenant-isolation` | `READY_FOR_REVIEW` | `mvn test -Dtest=TenantIsolationTest,ServerSecurityTest` | 100% Pass (12/12 tests) | `TenantIsolationTest.java`, `Service.java`, `docs/PR_PROGRESS.md` | Multi-tenant boundary enforcement, IDOR elimination, cross-workspace assertions |
 | **07** | Secure File Upload and Validation | `feature/pr-07-secure-file-upload-validation` | `READY_FOR_REVIEW` | `mvn test -Dtest=FileUploadSecurityTest,DocumentExtractorTest` | 100% Pass (17/17 tests) | `FileUploadSecurityTest.java`, `SafeZip.java`, `docs/PR_PROGRESS.md` | Path traversal prevention, magic bytes, zip bomb defenses, randomized blob storage |
-| **08** | API Validation and Error Handling | `feature/pr-08-api-validation-error-handling` | `NOT_STARTED` | Pending | Pending | `ApiException.java`, router | Target: structured JSON error envelopes |
+| **08** | API Validation and Error Handling | `feature/pr-08-api-validation-error-handling` | `READY_FOR_REVIEW` | `mvn test -Dtest=ApiErrorHandlingTest,OriginalityDeskServerTest` | 100% Pass (26/26 tests) | `ApiException.java`, `OriginalityDeskServer.java`, `ApiErrorHandlingTest.java` | Standardized error envelope, X-Request-Id correlation, zero stack trace leaks |
 | **09** | Document Processing Abstraction | `feature/pr-09-document-processing-abstraction` | `NOT_STARTED` | Pending | Pending | `DocumentParser.java`, models | Target: unified parser interface |
 | **10** | PDF Extraction Quality Improvements | `feature/pr-10-pdf-extraction-improvements` | `NOT_STARTED` | Pending | Pending | `PdfExtraction.java` | Target: page coordinates & low-text detection |
 | **11** | OCR Integration Using Tesseract | `feature/pr-11-ocr-tesseract-integration` | `NOT_STARTED` | Pending | Pending | OCR adapters, Tess4J | Target: scanned PDF text extraction |
