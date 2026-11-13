@@ -20,10 +20,28 @@ The repository also preserves the original **Desktop Writing Assistant** (JavaFX
 
 Captured from the live application serving synthetic test corpora in Chromium:
 
-| Public Landing Page | Evidence-Led Analysis Report | Mobile Viewport (Dark Theme) |
-|---|---|---|
-| [![Public Landing](docs/screenshots/landing.png)](docs/screenshots/landing.png) | [![Analysis Report](docs/screenshots/report.png)](docs/screenshots/report.png) | [![Mobile Report](docs/screenshots/mobile.png)](docs/screenshots/mobile.png) |
-| *Responsive landing page with feature explanations and interactive demonstration.* | *Traceable side-by-side passage comparison, citation observations, and human reviewer notes.* | *Persisted dark theme, keyboard-accessible navigation on a 390 × 844 viewport.* |
+### 1. Public Landing Page
+*Responsive landing page with feature explanations, platform overview, and interactive demonstration.*
+
+[![Public Landing](docs/screenshots/landing.png)](docs/screenshots/landing.png)
+
+---
+
+### 2. Evidence-Led Analysis Report
+*Traceable side-by-side passage comparison, citation observations, and human reviewer notes.*
+
+[![Analysis Report](docs/screenshots/report.png)](docs/screenshots/report.png)
+
+---
+
+### 3. Mobile Viewport (Dark Theme)
+*Persisted dark theme, keyboard-accessible navigation on a 390 × 844 mobile viewport.*
+
+<p align="center">
+  <a href="docs/screenshots/mobile.png">
+    <img src="docs/screenshots/mobile.png" alt="Mobile Viewport (Dark Theme)" width="420" />
+  </a>
+</p>
 
 *See [docs/screenshots/README.md](docs/screenshots/README.md) for observed test execution metrics and capture digests.*
 
