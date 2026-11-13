@@ -33,12 +33,27 @@ final class Security {
                 + Base64.getEncoder().encodeToString(derive(password, salt, ITERATIONS));
     }
     static boolean verify(String password, String encoded) {
-        String[] parts = (encoded == null ? DUMMY : encoded).split(":");
-        int iterations = Integer.parseInt(parts[0]);
-        if (iterations < ITERATIONS || iterations > 1_000_000) return false;
-        byte[] actual = derive(password, Base64.getDecoder().decode(parts[1]), iterations);
-        boolean equal = MessageDigest.isEqual(actual, Base64.getDecoder().decode(parts[2]));
-        return encoded != null && equal;
+        if (encoded == null || !encoded.contains(":")) {
+            String[] parts = DUMMY.split(":");
+            int it = Integer.parseInt(parts[0]);
+            derive(password, Base64.getDecoder().decode(parts[1]), it);
+            return false;
+        }
+        String[] parts = encoded.split(":");
+        if (parts.length != 3) return false;
+        int iterations;
+        byte[] salt;
+        byte[] expected;
+        try {
+            iterations = Integer.parseInt(parts[0]);
+            if (iterations < ITERATIONS || iterations > 1_000_000) return false;
+            salt = Base64.getDecoder().decode(parts[1]);
+            expected = Base64.getDecoder().decode(parts[2]);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+        byte[] actual = derive(password, salt, iterations);
+        return MessageDigest.isEqual(actual, expected);
     }
     private static byte[] derive(String password, byte[] salt, int iterations) {
         PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, 256);
