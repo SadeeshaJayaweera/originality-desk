@@ -23,6 +23,11 @@ final class PdfExtraction {
     private PdfExtraction() { }
 
     static DocumentExtractor.ExtractedDocument extract(byte[] content) throws IOException {
+        return extract(content, null, null);
+    }
+
+    static DocumentExtractor.ExtractedDocument extract(byte[] content, OcrEngine ocrEngine, OcrResourceGovernor governor) throws IOException {
+        long startTime = System.currentTimeMillis();
         try (PDDocument pdf = Loader.loadPDF(content)) {
             if (pdf.isEncrypted()) throw new IOException("Encrypted PDF documents are not supported");
             int pages = pdf.getNumberOfPages();
@@ -47,11 +52,66 @@ final class PdfExtraction {
             stripper.writeText(pdf, writer);
             String rawText = writer.text.toString();
             if (rawText.endsWith("\f")) rawText = rawText.substring(0, rawText.length() - 1);
-            String text = normalizeExtractedText(rawText);
-            if (text.codePoints().noneMatch(Character::isLetterOrDigit)) {
-                throw new IOException("PDF has no extractable text; OCR is unavailable");
+            String nativeText = normalizeExtractedText(rawText);
+            boolean hasNativeText = nativeText.codePoints().anyMatch(Character::isLetterOrDigit);
+
+            PdfQualityMetrics quality = PdfQualityMetrics.assess(nativeText, pages);
+
+            // Fast path: if native extraction produced rich, acceptable text density, return immediately.
+            if (hasNativeText && !quality.isLowTextDensity()) {
+                long duration = Math.max(0L, System.currentTimeMillis() - startTime);
+                ExtractionMetadata metadata = ExtractionMetadata.of("PDF", nativeText, pages, false, duration);
+                return new DocumentExtractor.ExtractedDocument(nativeText, pages, "PDF", metadata);
             }
-            return new DocumentExtractor.ExtractedDocument(text, pages, "PDF");
+
+            // If OCR is not available or not configured:
+            if (ocrEngine == null || !ocrEngine.isAvailable()) {
+                if (!hasNativeText) {
+                    throw new IOException("PDF has no extractable text; OCR is unavailable");
+                }
+                // Return what native text exists when OCR cannot run
+                long duration = Math.max(0L, System.currentTimeMillis() - startTime);
+                ExtractionMetadata metadata = ExtractionMetadata.of("PDF", nativeText, pages, false, duration);
+                return new DocumentExtractor.ExtractedDocument(nativeText, pages, "PDF", metadata);
+            }
+
+            // OCR is available and required (empty or low-density scanned PDF):
+            if (governor != null) {
+                governor.checkPageLimit(pages);
+            }
+
+            StringBuilder ocrText = new StringBuilder();
+            for (int i = 0; i < pages; i++) {
+                final int pageIndex = i;
+                String pageOcr;
+                if (governor != null) {
+                    pageOcr = governor.executeWithPermit(() -> ocrEngine.extractTextFromPdfPage(content, pageIndex));
+                } else {
+                    pageOcr = ocrEngine.extractTextFromPdfPage(content, pageIndex);
+                }
+
+                if (pageOcr != null && !pageOcr.isBlank()) {
+                    if (ocrText.length() > 0) ocrText.append("\f");
+                    ocrText.append(pageOcr.trim());
+                }
+                DocumentExtractor.checkLength(ocrText.length());
+            }
+
+            String finalOcrText = ocrText.toString();
+            boolean hasOcrText = finalOcrText.codePoints().anyMatch(Character::isLetterOrDigit);
+
+            if (!hasOcrText) {
+                if (hasNativeText) {
+                    long duration = Math.max(0L, System.currentTimeMillis() - startTime);
+                    ExtractionMetadata metadata = ExtractionMetadata.of("PDF", nativeText, pages, false, duration);
+                    return new DocumentExtractor.ExtractedDocument(nativeText, pages, "PDF", metadata);
+                }
+                throw new IOException("PDF has no extractable text; OCR produced no readable characters");
+            }
+
+            long duration = Math.max(0L, System.currentTimeMillis() - startTime);
+            ExtractionMetadata metadata = ExtractionMetadata.of("PDF", finalOcrText, pages, true, duration);
+            return new DocumentExtractor.ExtractedDocument(finalOcrText, pages, "PDF", metadata);
         } catch (InvalidPasswordException e) {
             throw new IOException("Encrypted PDF documents are not supported", e);
         } catch (TextBudgetExceeded e) {
@@ -91,7 +151,6 @@ final class PdfExtraction {
         if (document.getXrefTable().size() > MAX_OBJECTS) throw new IOException("PDF object limit exceeded");
         long total = 0;
         byte[] buffer = new byte[8192];
-        // Resolve lazily loaded objects, including streams not used by the visible pages.
         for (COSObjectKey key : new ArrayList<>(document.getXrefTable().keySet())) {
             COSBase object = document.getObjectFromPool(key).getObject();
             if (!(object instanceof COSStream stream)) continue;

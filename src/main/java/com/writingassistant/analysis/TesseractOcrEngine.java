@@ -50,6 +50,18 @@ public class TesseractOcrEngine implements OcrEngine {
         return language;
     }
 
+    private java.util.List<String> buildCommand(String... args) {
+        java.util.List<String> cmd = new java.util.ArrayList<>();
+        if (binaryPath.endsWith(".sh")) {
+            cmd.add("/bin/sh");
+        }
+        cmd.add(binaryPath);
+        for (String a : args) {
+            cmd.add(a);
+        }
+        return cmd;
+    }
+
     @Override
     public boolean isAvailable() {
         if (availableCache != null) {
@@ -58,7 +70,7 @@ public class TesseractOcrEngine implements OcrEngine {
         synchronized (this) {
             if (availableCache != null) return availableCache;
             try {
-                ProcessBuilder pb = new ProcessBuilder(binaryPath, "--version");
+                ProcessBuilder pb = new ProcessBuilder(buildCommand("--version"));
                 pb.redirectErrorStream(true);
                 Process process = pb.start();
                 boolean completed = process.waitFor(3, TimeUnit.SECONDS);
@@ -97,10 +109,11 @@ public class TesseractOcrEngine implements OcrEngine {
             ImageIO.write(image, "png", tempInput.toFile());
 
             ProcessBuilder pb = new ProcessBuilder(
-                    binaryPath,
-                    tempInput.toAbsolutePath().toString(),
-                    tempOutputBase.toAbsolutePath().toString(),
-                    "-l", language
+                    buildCommand(
+                            tempInput.toAbsolutePath().toString(),
+                            tempOutputBase.toAbsolutePath().toString(),
+                            "-l", language
+                    )
             );
             pb.redirectErrorStream(true);
             Process process = pb.start();
