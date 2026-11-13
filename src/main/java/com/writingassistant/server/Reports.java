@@ -25,7 +25,13 @@ final class Reports {
         for (JsonElement value : matches(report)) {
             JsonObject m = value.getAsJsonObject();
             out.append("<section><h3>").append(escape(text(m, "sourceTitle"))).append("</h3><p>")
-                    .append(escape(text(m, "method"))).append("</p><blockquote>")
+                    .append(escape(text(m, "method"))).append("</p>");
+            String resolver = text(m, "resolverUrl");
+            if (resolver.isBlank()) resolver = text(m, "persistentResolverUrl");
+            if (!resolver.isBlank()) {
+                out.append("<p><a href=\"").append(escape(resolver)).append("\" target=\"_blank\" rel=\"noopener noreferrer\">Publisher Record</a></p>");
+            }
+            out.append("<blockquote>")
                     .append(escape(text(m, "submittedPassage"))).append("</blockquote><blockquote>")
                     .append(escape(text(m, "sourcePassage"))).append("</blockquote></section>");
         }
@@ -81,6 +87,11 @@ final class Reports {
         for (JsonElement value : matches(report)) {
             JsonObject m = value.getAsJsonObject();
             wrap(lines, "Source: " + text(m, "sourceTitle") + " [" + text(m, "method") + "]");
+            String resolver = text(m, "resolverUrl");
+            if (resolver.isBlank()) resolver = text(m, "persistentResolverUrl");
+            if (!resolver.isBlank()) {
+                wrap(lines, "Publisher Record: " + resolver);
+            }
             wrap(lines, "Submitted: " + text(m, "submittedPassage"));
             wrap(lines, "Source passage: " + text(m, "sourcePassage"));
             wrap(lines, "Citation: " + text(m, "citationObservation"));
