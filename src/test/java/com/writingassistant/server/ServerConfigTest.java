@@ -75,3 +75,4 @@ class ServerConfigTest {
         assertEquals(Duration.ofSeconds(120), config.jobTimeout());
     }
 }
+

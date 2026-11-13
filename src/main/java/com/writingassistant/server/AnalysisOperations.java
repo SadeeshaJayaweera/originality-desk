@@ -13,3 +13,4 @@ public interface AnalysisOperations {
     Map<String, Object> cancel(Service.Actor actor, String id) throws Exception;
     JsonObject report(Service.Actor actor, String id) throws Exception;
 }
+

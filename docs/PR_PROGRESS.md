@@ -17,7 +17,7 @@ This document tracks the live implementation status of the 40 individual Pull Re
 
 | Total PRs | Completed / Ready | In Progress | Blocked | Not Started |
 |---|---|---|---|---|
-| **40** | **4** | **0** | **0** | **36** |
+| **40** | **8** | **0** | **0** | **32** |
 
 ---
 
@@ -29,10 +29,10 @@ This document tracks the live implementation status of the 40 individual Pull Re
 | **02** | Maven Dependency and Build Reliability | `feature/pr-02-maven-build-reliability` | `READY_FOR_REVIEW` | `mvn --offline test-compile`, `mvn test` | 100% Pass | `pom.xml`, `docs/BUILD_REQUIREMENTS.md`, `docs/PR_PROGRESS.md` | Centralized properties, reproducible timestamps, license matrix |
 | **03** | Backend Package and Service Architecture | `feature/pr-03-backend-architecture` | `READY_FOR_REVIEW` | `mvn test -Dtest=ServiceArchitectureTest,ServerSecurityTest` | 100% Pass (10/10 tests) | `AuthOperations.java`, `DocumentOperations.java`, `AnalysisOperations.java`, `ReviewOperations.java`, `SystemOperations.java`, `Service.java`, `ServiceArchitectureTest.java` | Decoupled service layer into 5 cohesive operations interfaces |
 | **04** | Configuration and Secrets Management | `feature/pr-04-configuration-secrets-management` | `READY_FOR_REVIEW` | `mvn test -Dtest=ServerConfigTest,ServerSecurityTest` | 100% Pass (13/13 tests) | `ServerConfig.java`, `.env.example`, `ServerConfigTest.java` | Environment profiles, production fail-safe checks, secret masking |
-| **05** | Authentication and Session Security Review | `feature/pr-05-auth-session-security` | `NOT_STARTED` | Pending | Pending | `Security.java`, auth endpoints | Target: PBKDF2 hardening & cookie security |
-| **06** | Authorisation and Tenant Isolation | `feature/pr-06-authorisation-tenant-isolation` | `NOT_STARTED` | Pending | Pending | `Service.java`, DAOs, security tests | Target: zero cross-workspace data leakage |
-| **07** | Secure File Upload and Validation | `feature/pr-07-secure-file-upload-validation` | `NOT_STARTED` | Pending | Pending | `SafeZip.java`, `DocumentExtractor.java` | Target: magic bytes, bomb defense |
-| **08** | API Validation and Error Handling | `feature/pr-08-api-validation-error-handling` | `NOT_STARTED` | Pending | Pending | `ApiException.java`, router | Target: structured JSON error envelopes |
+| **05** | Authentication and Session Security Review | `feature/pr-05-auth-session-security` | `READY_FOR_REVIEW` | `mvn test -Dtest=ServerSecurityTest` | 100% Pass (11/11 tests) | `Security.java`, `ServerSecurityTest.java`, `docs/SECURITY.md` | PBKDF2 hardening, hash tamper safety, session entropy audit |
+| **06** | Authorisation and Tenant Isolation | `feature/pr-06-authorisation-tenant-isolation` | `READY_FOR_REVIEW` | `mvn test -Dtest=TenantIsolationTest,ServerSecurityTest` | 100% Pass (12/12 tests) | `TenantIsolationTest.java`, `Service.java`, `docs/PR_PROGRESS.md` | Multi-tenant boundary enforcement, IDOR elimination, cross-workspace assertions |
+| **07** | Secure File Upload and Validation | `feature/pr-07-secure-file-upload-validation` | `READY_FOR_REVIEW` | `mvn test -Dtest=FileUploadSecurityTest,DocumentExtractorTest` | 100% Pass (17/17 tests) | `FileUploadSecurityTest.java`, `SafeZip.java`, `docs/PR_PROGRESS.md` | Path traversal prevention, magic bytes, zip bomb defenses, randomized blob storage |
+| **08** | API Validation and Error Handling | `feature/pr-08-api-validation-error-handling` | `READY_FOR_REVIEW` | `mvn test -Dtest=ApiErrorHandlingTest,OriginalityDeskServerTest` | 100% Pass (26/26 tests) | `ApiException.java`, `OriginalityDeskServer.java`, `ApiErrorHandlingTest.java` | Standardized error envelope, X-Request-Id correlation, zero stack trace leaks |
 | **09** | Document Processing Abstraction | `feature/pr-09-document-processing-abstraction` | `NOT_STARTED` | Pending | Pending | `DocumentParser.java`, models | Target: unified parser interface |
 | **10** | PDF Extraction Quality Improvements | `feature/pr-10-pdf-extraction-improvements` | `NOT_STARTED` | Pending | Pending | `PdfExtraction.java` | Target: page coordinates & low-text detection |
 | **11** | OCR Integration Using Tesseract | `feature/pr-11-ocr-tesseract-integration` | `NOT_STARTED` | Pending | Pending | OCR adapters, Tess4J | Target: scanned PDF text extraction |

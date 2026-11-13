@@ -28,6 +28,32 @@ class ServerSecurityTest {
         assertNotEquals(Security.token(), Security.token());
     }
 
+    @Test void passwordVerificationHandlesCorruptOrTamperedHashesSafely() {
+        // Missing colon
+        assertFalse(Security.verify("password", "invalidhash"));
+        // Empty string
+        assertFalse(Security.verify("password", ""));
+        // Too few components
+        assertFalse(Security.verify("password", "210000:saltonly"));
+        // Negative iterations
+        assertFalse(Security.verify("password", "-1:c2FsdA==:aGFzaA=="));
+        // Too few iterations (< 210,000)
+        assertFalse(Security.verify("password", "1000:c2FsdA==:aGFzaA=="));
+        // Excessive iterations (> 1,000,000)
+        assertFalse(Security.verify("password", "1000001:c2FsdA==:aGFzaA=="));
+        // Non-integer iterations
+        assertFalse(Security.verify("password", "abc:c2FsdA==:aGFzaA=="));
+        // Corrupt base64 salt
+        assertFalse(Security.verify("password", "210000:not-valid-base64!@:aGFzaA=="));
+    }
+
+    @Test void sessionTokenHasSufficientEntropy() {
+        String token = Security.token();
+        assertNotNull(token);
+        assertEquals(43, token.length(), "32-byte token without padding must be 43 base64url characters");
+        assertTrue(token.matches("^[A-Za-z0-9_-]{43}$"), "Token must match URL-safe base64 character set");
+    }
+
     @Test void limiterEnforcesBothPerKeyAndTotalKeyBounds() {
         Security.Limiter limiter = new Security.Limiter();
         limiter.take("one", 2); limiter.take("one", 2);

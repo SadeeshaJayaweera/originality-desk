@@ -147,11 +147,11 @@ public final class OriginalityDeskServer implements AutoCloseable {
             } else throw ApiException.missing();
         } catch (ApiException e) {
             if (e.status == 429) exchange.getResponseHeaders().set("Retry-After", "60");
-            if (exchange.getResponseCode() == -1) json(exchange, e.status, Map.of("error", Map.of("code", e.code, "message", e.getMessage())));
+            if (exchange.getResponseCode() == -1) json(exchange, e.status, Map.of("error", Map.of("code", e.code, "message", e.getMessage(), "requestId", requestId)));
         } catch (Exception e) {
             System.err.println("desk-http: request failed (" + e.getClass().getSimpleName() + ")");
             if (exchange.getResponseCode() == -1)
-                json(exchange, 500, Map.of("error", Map.of("code", "INTERNAL_ERROR", "message", "Request could not be completed")));
+                json(exchange, 500, Map.of("error", Map.of("code", "INTERNAL_ERROR", "message", "Request could not be completed", "requestId", requestId)));
         } finally {
             try { exchange.close(); }
             finally {
