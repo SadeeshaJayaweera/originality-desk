@@ -218,6 +218,10 @@ public final class OriginalityDeskServer implements AutoCloseable {
                 if (method.equals("GET")) json(x, 200, service.reviews(actor, path[1], page(query), size(query)));
                 else if (method.equals("POST")) json(x, 201, service.review(actor, path[1], body(x, false)));
                 else throw methodError();
+            } else if (path[2].equals("review-summary")) {
+                requireMethod(method, "GET"); json(x, 200, service.reviewSummary(actor, path[1]));
+            } else if (path[2].equals("review-resolve")) {
+                requireMethod(method, "POST"); json(x, 200, service.resolveConflict(actor, path[1], body(x, false)));
             } else throw ApiException.missing();
         } else throw ApiException.missing();
     }

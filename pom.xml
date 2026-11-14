@@ -34,6 +34,7 @@
         <slf4j.version>1.7.36</slf4j.version>
         <bootstrapfx.version>0.4.0</bootstrapfx.version>
         <onnxruntime.version>1.17.1</onnxruntime.version>
+        <flyway.version>9.22.3</flyway.version>
         <junit.version>5.10.2</junit.version>
     </properties>
 
@@ -104,6 +105,13 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.2</version>
+        </dependency>
+
+        <!-- Flyway Database Migration Framework -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
         </dependency>
 
         <!-- JUnit 5 Testing -->
