@@ -11,6 +11,11 @@ import com.writingassistant.sources.ScholarlyCitationFormatter;
 import com.writingassistant.sources.SourceAttribution;
 import com.writingassistant.sources.UnifiedExternalReferenceSearch;
 import com.writingassistant.sources.UnifiedSearchResult;
+import com.writingassistant.review.DocumentReviewSummary;
+import com.writingassistant.review.HumanReviewWorkflowEngine;
+import com.writingassistant.review.ReviewDecision;
+import com.writingassistant.review.ReviewRecord;
+import com.writingassistant.review.ReviewRole;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -42,6 +47,9 @@ public final class Service implements AuthOperations, DocumentOperations, Analys
         public void reviewer() {
             if (!Set.of("INSTITUTION_ADMIN", "REVIEWER").contains(role))
                 throw new ApiException(403, "FORBIDDEN", "Reviewer role required");
+        }
+        public boolean isAdmin() {
+            return "INSTITUTION_ADMIN".equals(role);
         }
     }
     public record Authentication(String token, Map<String,Object> body) {}
@@ -572,6 +580,96 @@ public final class Service implements AuthOperations, DocumentOperations, Analys
             return envelope(sql.rows("SELECT id,analysis_id AS analysisId,user_id AS userId,match_index AS matchIndex,decision,note,created_at AS createdAt FROM reviews WHERE workspace_id=? AND analysis_id=? ORDER BY created_at,id LIMIT ? OFFSET ?",
                     actor.workspaceId(), analysisId, size, (long) (page - 1) * size),
                     sql.number("SELECT COUNT(*) FROM reviews WHERE workspace_id=? AND analysis_id=?", actor.workspaceId(), analysisId), page, size);
+        });
+    }
+
+    public Map<String, Object> reviewSummary(Actor actor, String analysisId) throws Exception {
+        actor.reviewer();
+        return db.transaction(sql -> {
+            Map<String, Object> row = sql.one("SELECT status,result_json FROM analyses WHERE workspace_id=? AND id=?", actor.workspaceId(), analysisId);
+            if (row == null) throw ApiException.missing();
+            if (!"COMPLETED".equals(row.get("status"))) throw ApiException.conflict("Analysis is not complete");
+
+            JsonObject report = JsonParser.parseString((String) row.get("result_json")).getAsJsonObject();
+            int totalMatches = 0;
+            if (report.has("result") && report.getAsJsonObject("result").has("matches")) {
+                totalMatches = report.getAsJsonObject("result").getAsJsonArray("matches").size();
+            }
+
+            List<Map<String, Object>> rows = sql.rows(
+                    "SELECT id,analysis_id AS analysisId,user_id AS userId,match_index AS matchIndex,decision,note,created_at AS createdAt "
+                    + "FROM reviews WHERE workspace_id=? AND analysis_id=? ORDER BY created_at,id",
+                    actor.workspaceId(), analysisId
+            );
+
+            List<ReviewRecord> records = new ArrayList<>();
+            for (Map<String, Object> r : rows) {
+                String note = (String) r.get("note");
+                boolean isResolution = note != null && note.startsWith("[RESOLUTION]");
+                String cleanNote = isResolution ? note.substring("[RESOLUTION]".length()).strip() : (note != null ? note : "");
+                ReviewDecision decision = ReviewDecision.parse((String) r.get("decision"));
+                ReviewRole role = ReviewRole.PEER_REVIEWER;
+                records.add(new ReviewRecord(
+                        (String) r.get("id"),
+                        actor.workspaceId(),
+                        analysisId,
+                        ((Number) r.get("matchIndex")).intValue(),
+                        (String) r.get("userId"),
+                        (String) r.get("userId"),
+                        role,
+                        decision,
+                        cleanNote,
+                        (String) r.get("createdAt"),
+                        isResolution
+                ));
+            }
+
+            HumanReviewWorkflowEngine engine = new HumanReviewWorkflowEngine();
+            DocumentReviewSummary summary = engine.evaluate(actor.workspaceId(), analysisId, totalMatches, records);
+
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("analysisId", summary.analysisId());
+            result.put("workspaceId", summary.workspaceId());
+            result.put("overallStatus", summary.overallStatus());
+            result.put("totalMatches", summary.totalMatches());
+            result.put("reviewedMatches", summary.reviewedMatches());
+            result.put("approvedCount", summary.approvedCount());
+            result.put("flaggedCount", summary.flaggedCount());
+            result.put("exemptedCount", summary.exemptedCount());
+            result.put("escalatedCount", summary.escalatedCount());
+            result.put("conflictCount", summary.conflictCount());
+            result.put("matchSummaries", summary.matchSummaries());
+            result.put("history", rows);
+            return result;
+        });
+    }
+
+    public Map<String, Object> resolveConflict(Actor actor, String analysisId, JsonObject input) throws Exception {
+        actor.reviewer();
+        if (!actor.isAdmin()) {
+            throw ApiException.forbidden("Only administrators or senior integrity officers may resolve conflicting reviewer decisions");
+        }
+        int index = integer(input, "matchIndex");
+        String decisionStr = string(input, "decision", 32);
+        ReviewDecision decision = ReviewDecision.parse(decisionStr);
+        String note = string(input, "note", 4000);
+        if (note.strip().length() < 5) {
+            throw ApiException.bad("Resolution note requires at least 5 characters of justification");
+        }
+
+        return db.transaction(sql -> {
+            Map<String, Object> row = sql.one("SELECT status,result_json FROM analyses WHERE workspace_id=? AND id=?", actor.workspaceId(), analysisId);
+            if (row == null) throw ApiException.missing();
+            if (!"COMPLETED".equals(row.get("status"))) throw ApiException.conflict("Analysis is not complete");
+            JsonObject report = JsonParser.parseString((String) row.get("result_json")).getAsJsonObject();
+            if (index >= report.getAsJsonObject("result").getAsJsonArray("matches").size()) throw ApiException.bad("Invalid matchIndex");
+
+            String reviewId = id();
+            String formattedNote = "[RESOLUTION] " + note.strip();
+            sql.execute("INSERT INTO reviews(id,workspace_id,analysis_id,user_id,match_index,decision,note,created_at) VALUES(?,?,?,?,?,?,?,?)",
+                    reviewId, actor.workspaceId(), analysisId, actor.userId(), index, decision.name(), formattedNote, now());
+            audit(sql, actor, "REVIEW_CONFLICT_RESOLVED", analysisId);
+            return sql.one("SELECT id,analysis_id AS analysisId,user_id AS userId,match_index AS matchIndex,decision,note,created_at AS createdAt FROM reviews WHERE workspace_id=? AND id=?", actor.workspaceId(), reviewId);
         });
     }
 
