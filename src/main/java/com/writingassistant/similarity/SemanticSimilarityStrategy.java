@@ -1,43 +1,52 @@
 package com.writingassistant.similarity;
 
 import com.writingassistant.similarity.onnx.EmbeddingEngine;
+import com.writingassistant.similarity.semantic.SemanticAnalysisResult;
+import com.writingassistant.similarity.semantic.SemanticSimilarityAnalyzer;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Strategy contract for semantic vector similarity analysis powered by neural embeddings.
- * Supports ONNX Runtime Sentence Transformers and deterministic offline embeddings.
+ * Strategy implementation for semantic vector similarity analysis powered by neural embeddings.
+ * Utilizes sentence-aware chunking, batch vector inference, and interval-union coverage.
  */
 public class SemanticSimilarityStrategy implements SimilarityStrategy {
 
     public static final String STRATEGY_NAME = "semantic-embeddings";
-    private final EmbeddingEngine embeddingEngine;
+
+    private final SemanticSimilarityAnalyzer analyzer;
     private final boolean explicitlyAvailable;
     private final String modelName;
 
     public SemanticSimilarityStrategy() {
-        this((EmbeddingEngine) null);
+        this((SemanticSimilarityAnalyzer) null);
     }
 
     public SemanticSimilarityStrategy(EmbeddingEngine embeddingEngine) {
-        this.embeddingEngine = embeddingEngine;
-        this.explicitlyAvailable = embeddingEngine != null && embeddingEngine.isAvailable();
-        this.modelName = embeddingEngine != null ? embeddingEngine.getModelName() : "none";
+        this(embeddingEngine != null ? new SemanticSimilarityAnalyzer(embeddingEngine) : null);
+    }
+
+    public SemanticSimilarityStrategy(SemanticSimilarityAnalyzer analyzer) {
+        this.analyzer = analyzer;
+        this.explicitlyAvailable = analyzer != null && analyzer.getPipeline().getEmbeddingEngine().isAvailable();
+        this.modelName = analyzer != null ? analyzer.getPipeline().getEmbeddingEngine().getModelName() : "none";
     }
 
     public SemanticSimilarityStrategy(boolean available, String modelName) {
-        this.embeddingEngine = null;
+        this.analyzer = null;
         this.explicitlyAvailable = available;
         this.modelName = modelName != null ? modelName : "none";
     }
 
+    public Optional<SemanticSimilarityAnalyzer> getAnalyzer() {
+        return Optional.ofNullable(analyzer);
+    }
+
     public Optional<EmbeddingEngine> getEmbeddingEngine() {
-        return Optional.ofNullable(embeddingEngine);
+        return analyzer != null ? Optional.of(analyzer.getPipeline().getEmbeddingEngine()) : Optional.empty();
     }
 
     @Override
@@ -57,7 +66,7 @@ public class SemanticSimilarityStrategy implements SimilarityStrategy {
 
     @Override
     public boolean isAvailable() {
-        return explicitlyAvailable || (embeddingEngine != null && embeddingEngine.isAvailable());
+        return explicitlyAvailable || (analyzer != null && analyzer.getPipeline().getEmbeddingEngine().isAvailable());
     }
 
     @Override
@@ -78,65 +87,26 @@ public class SemanticSimilarityStrategy implements SimilarityStrategy {
             return StrategyMatchResult.empty(SimilarityStrategyType.SEMANTIC, STRATEGY_NAME);
         }
 
-        if (embeddingEngine == null) {
+        if (analyzer == null) {
             return new StrategyMatchResult(
                     SimilarityStrategyType.SEMANTIC,
                     STRATEGY_NAME,
                     List.of(),
                     0.0,
-                    List.of("Embedding engine instance is not available for inference."),
+                    List.of("Semantic analyzer instance is not configured."),
                     Map.of("status", "UNAVAILABLE", "model", modelName)
             );
         }
 
-        float[] targetVector = embeddingEngine.embed(target.text());
-        List<SimilaritySpan> spans = new ArrayList<>();
-        double maxSimilarity = 0.0;
-        double minThreshold = options != null ? options.minScoreThreshold() : 0.65;
-
-        for (SimilaritySource source : corpus) {
-            if (source.text() == null || source.text().isBlank()) continue;
-            float[] sourceVector = embeddingEngine.embed(source.text());
-            double cosine = embeddingEngine.similarity(targetVector, sourceVector);
-
-            if (cosine > maxSimilarity) {
-                maxSimilarity = cosine;
-            }
-
-            if (cosine >= minThreshold) {
-                int targetLen = target.text().length();
-                int sourceLen = source.text().length();
-                String targetExcerpt = target.text().substring(0, Math.min(targetLen, 200));
-                String sourceExcerpt = source.text().substring(0, Math.min(sourceLen, 200));
-
-                spans.add(new SimilaritySpan(
-                        source.sourceId(),
-                        0,
-                        targetLen,
-                        0,
-                        sourceLen,
-                        "SEMANTIC",
-                        cosine,
-                        targetExcerpt,
-                        sourceExcerpt
-                ));
-            }
-        }
-
-        Map<String, Object> telemetry = new HashMap<>();
-        telemetry.put("status", "SUCCESS");
-        telemetry.put("model", modelName);
-        telemetry.put("dimensions", embeddingEngine.getDimensions());
-        telemetry.put("corpus_size", corpus.size());
-        telemetry.put("max_similarity", maxSimilarity);
+        SemanticAnalysisResult result = analyzer.analyze(target, corpus, options);
 
         return new StrategyMatchResult(
                 SimilarityStrategyType.SEMANTIC,
                 STRATEGY_NAME,
-                spans,
-                maxSimilarity,
+                result.similaritySpans(),
+                result.coverageRatio(),
                 List.of(),
-                telemetry
+                result.telemetry()
         );
     }
 }
