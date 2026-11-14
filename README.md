@@ -218,7 +218,7 @@ sequenceDiagram
     Svr->>DB: INSERT into workspaces, users (Role: INSTITUTION_ADMIN)
     Note over Svr: Generate 256-bit cryptographically secure token
     Svr->>DB: INSERT into sessions (SHA-256 token_hash, 12h expiry)
-    Svr-->>User: 201 Created (Set-Cookie: desk_session=...; HttpOnly; SameSite=Strict)
+    Svr-->>User: 201 Created (Set-Cookie: desk_session=..., HttpOnly, SameSite=Strict)
 
     User->>Svr: POST /api/v1/documents (with Origin header & desk_session cookie)
     Note over Svr: Validate Host authority & Origin == publicOrigin (Anti-CSRF)
