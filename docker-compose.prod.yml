@@ -1,0 +1,135 @@
+version: '3.8'
+
+services:
+  originality-desk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: originality-desk-prod
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-8080}:8080"
+    environment:
+      - DESK_HOST=0.0.0.0
+      - DESK_PORT=8080
+      - DESK_PUBLIC_ORIGIN=${DESK_PUBLIC_ORIGIN:-https://originality.institution.edu}
+      - DESK_DATA_DIR=/app/data
+      - DESK_SECURE_COOKIES=${DESK_SECURE_COOKIES:-true}
+      - DESK_RETENTION_DAYS=${DESK_RETENTION_DAYS:-180}
+      - DESK_JOB_TIMEOUT_SECONDS=${DESK_JOB_TIMEOUT_SECONDS:-300}
+      - STORAGE_BACKEND=${STORAGE_BACKEND:-s3}
+      - STORAGE_S3_ENDPOINT=http://seaweedfs:8333
+      - STORAGE_S3_BUCKET=originality-desk
+      - STORAGE_S3_ACCESS_KEY=${STORAGE_S3_ACCESS_KEY:-minioadmin}
+      - STORAGE_S3_SECRET_KEY=${STORAGE_S3_SECRET_KEY:-minioadmin}
+      - DB_URL=jdbc:postgresql://postgres:5432/originality_desk
+      - DB_USER=originality_admin
+      - DB_PASSWORD=${DB_PASSWORD:-SecretProductionPassword123!}
+      - JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -Dfile.encoding=UTF-8
+    depends_on:
+      postgres:
+        condition: service_healthy
+      seaweedfs:
+        condition: service_started
+    volumes:
+      - desk_app_data:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4096M
+        reservations:
+          cpus: '1.0'
+          memory: 1024M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - desk_net
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: originality-desk-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=originality_desk
+      - POSTGRES_USER=originality_admin
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-SecretProductionPassword123!}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U originality_admin -d originality_desk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - desk_net
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    container_name: originality-desk-seaweedfs
+    restart: unless-stopped
+    command: "server -s3 -dir=/data -s3.port=8333"
+    ports:
+      - "127.0.0.1:8333:8333"
+      - "127.0.0.1:9333:9333"
+    volumes:
+      - seaweed_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M
+    networks:
+      - desk_net
+
+  backup-sidecar:
+    image: postgres:16-alpine
+    container_name: originality-desk-backup-sidecar
+    restart: unless-stopped
+    environment:
+      - PGPASSWORD=${DB_PASSWORD:-SecretProductionPassword123!}
+      - BACKUP_DIR=/backups
+      - RETENTION_DAYS=30
+    volumes:
+      - backup_data:/backups
+      - ./scripts/backup:/scripts:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "0 2 * * * /scripts/backup-postgres.sh >> /backups/backup.log 2>&1" > /etc/crontabs/root
+        crond -f -l 2
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - desk_net
+
+volumes:
+  desk_app_data:
+    driver: local
+  postgres_data:
+    driver: local
+  seaweed_data:
+    driver: local
+  backup_data:
+    driver: local
+
+networks:
+  desk_net:
+    driver: bridge
