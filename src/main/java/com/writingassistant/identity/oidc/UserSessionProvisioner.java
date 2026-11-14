@@ -1,11 +1,9 @@
 package com.writingassistant.identity.oidc;
 
-import java.util.Map;
-
 /**
  * Functional callback interface for provisioning OIDC users and issuing sessions in the platform.
+ * Sub-interface of {@link com.writingassistant.identity.UserSessionProvisioner} for backwards compatibility.
  */
 @FunctionalInterface
-public interface UserSessionProvisioner {
-    Map<String, Object> provisionUserAndSession(String email, String name, String role, String defaultWorkspaceId) throws Exception;
+public interface UserSessionProvisioner extends com.writingassistant.identity.UserSessionProvisioner {
 }
