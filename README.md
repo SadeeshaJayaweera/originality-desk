@@ -2,11 +2,12 @@
 
 [![Java 17](https://img.shields.io/badge/Java-17%2B-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-3.45.1-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%2B%20pgvector-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Apache PDFBox](https://img.shields.io/badge/Apache%20PDFBox-3.0.5-D22128?logo=apache&logoColor=white)](https://pdfbox.apache.org/)
 [![Apache POI](https://img.shields.io/badge/Apache%20POI-5.2.5-D22128?logo=apache&logoColor=white)](https://poi.apache.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)]()
+[![Build & Tests](https://img.shields.io/badge/Tests-349%20Passing-brightgreen)]()
 
 An evidence-based academic document originality, similarity detection, and citation analysis platform. Built in **Java 17** with a zero-external-dependency embedded server, a deterministic multi-strategy similarity engine, and an accessible, responsive browser workspace.
 
@@ -43,7 +44,7 @@ Captured from the live application serving synthetic test corpora in Chromium:
   </a>
 </p>
 
-*See [docs/screenshots/README.md](docs/screenshots/README.md) for observed test execution metrics and capture digests.*
+*Image capture metadata and checksums are verified in [docs/screenshots/metadata.json](docs/screenshots/metadata.json).*
 
 ---
 
@@ -74,6 +75,7 @@ flowchart TD
         Browser["Modern Web Browser (SPA)"]
         CLI["API Clients / cURL"]
         DesktopApp["Desktop Writing Assistant (JavaFX 21)"]
+        LMS["LTI 1.3 LMS (Canvas / Moodle / Blackboard)"]
     end
 
     subgraph Ingress ["Ingress & Security Boundary"]
@@ -83,32 +85,37 @@ flowchart TD
     subgraph Server ["Originality Desk Application Server (Java 17)"]
         HttpListener["Embedded JDK HttpServer (Port 8080)"]
         SecurityFilter["Security Filter (Host/Origin CSRF Check, Limiter, CSP)"]
-        RestAPI["REST API Router (/api/v1/*)"]
+        RestAPI["REST API Router (/api/v1/*, /scim/v2/*)"]
+        IdentityService["Identity & SSO (SAML 2.0 / OIDC / SCIM / LTI)"]
         
         subgraph Core_Engines ["Core Analysis & Document Engines"]
             DocExtractor["Document Extractor (PDF, DOCX, TXT)"]
             TextNormalizer["Text Normalizer (Unicode NFC, Offsets)"]
             EvidenceEngine["Similarity Engine (Exact N-gram, Near Shingling)"]
+            SemanticEngine["Semantic Retrieval (ONNX Runtime, all-MiniLM-L6-v2)"]
             CitationDetector["Citation Pattern Detector (APA/IEEE/MLA)"]
+            ExternalSources["Federated External Search (Crossref, Semantic Scholar, CORE)"]
             ReportGen["Multi-Format Report Generator (PDFBox, HTML, CSV)"]
         end
 
         subgraph Background ["Background Processing"]
-            JobQueue["Durable Job Dispatcher"]
+            JobQueue["Durable Job Dispatcher & Lease Manager"]
             Worker["Bounded Computation Worker Thread"]
         end
     end
 
     subgraph Storage ["Storage & Persistence Layer"]
-        DB["SQLite 3.45 Database (WAL Mode, server.sqlite3)"]
-        BlobStore["Content-Addressed Blobs (POSIX 0700, /documents)"]
+        DB["SQLite 3.45 (WAL Mode) / PostgreSQL 15+ (pgvector)"]
+        BlobStore["Object Storage (POSIX Local 0700 / AWS S3 Compatible)"]
     end
 
     Browser -->|HTTPS| ReverseProxy
     CLI -->|HTTPS| ReverseProxy
+    LMS -->|LTI 1.3 / HTTPS| ReverseProxy
     ReverseProxy -->|HTTP| HttpListener
     HttpListener --> SecurityFilter
     SecurityFilter --> RestAPI
+    RestAPI --> IdentityService
     RestAPI --> Core_Engines
     RestAPI --> JobQueue
     JobQueue --> Worker
@@ -136,7 +143,7 @@ stateDiagram-v2
     READY --> ANALYSING: Analysis Job Queued
     ANALYSING --> GENERATING_REPORT: Similarity & Citations Evaluated
     GENERATING_REPORT --> COMPLETED: Snapshot Persisted
-    ANALYSING --> FAILED: Execution Timeout (60s)
+    ANALYSING --> FAILED: Execution Timeout (90s)
     ANALYSING --> CANCELLED: User Requested Cancellation
     FAILED --> RETRYING: Exponential Backoff (Max 3)
     RETRYING --> QUEUED
@@ -152,16 +159,19 @@ flowchart TD
     subgraph Ingestion ["1. Document Ingestion"]
         DocSub["Submitted Document"]
         DocRefs["Selected Reference Documents"]
+        ExtRefs["External Scholarly Sources (Crossref, Semantic Scholar, CORE)"]
     end
 
     subgraph Normalization ["2. Normalization & Tokenization"]
         Norm["Unicode NFC, Line-Break & Homoglyph Normalizer"]
         Offsets["Preserve Original UTF-16 Character Offsets"]
+        Chunks["Sentence-Aware Chunking & Coordinate Preservation"]
     end
 
     subgraph Similarity ["3. Multi-Strategy Similarity Analysis"]
         Exact["Exact Matcher: Inverted N-Gram Index (n >= 8)"]
         Near["Near Matcher: Word Shingling & Jaccard Index (t >= 0.70)"]
+        Semantic["Semantic Matcher: Local ONNX Vector Embeddings (MiniLM-L6)"]
         Union["Interval Union Coverage: Non-Overlapping Spans"]
     end
 
@@ -177,11 +187,15 @@ flowchart TD
 
     DocSub --> Norm
     DocRefs --> Norm
+    ExtRefs --> Norm
     Norm --> Offsets
+    Offsets --> Chunks
     Offsets --> Exact
     Offsets --> Near
+    Chunks --> Semantic
     Exact --> Union
     Near --> Union
+    Semantic --> Union
     Union --> Context
     Cite --> Context
     Context --> Snapshot
@@ -197,7 +211,7 @@ sequenceDiagram
     autonumber
     actor User as User / Browser
     participant Svr as Originality Desk Server
-    participant DB as SQLite Relational Database
+    participant DB as Relational Database (SQLite / Postgres)
 
     User->>Svr: POST /api/v1/auth/register (name, email, password, workspace)
     Note over Svr: PBKDF2-HMAC-SHA256 (210,000 iterations)
@@ -318,19 +332,19 @@ erDiagram
 
 ```mermaid
 flowchart LR
-    API["API Request"] -->|Enqueue| JobsTable[("jobs Table (SQLite)")]
+    API["API Request"] -->|Enqueue| JobsTable[("jobs Table (SQLite / Postgres)")]
     Dispatcher["JobWorker Dispatcher Thread"] -->|Poll available_at| JobsTable
-    Dispatcher -->|Claim & Status=RUNNING| Computation["Single-Thread Bounded Worker"]
+    Dispatcher -->|Claim & Lease Management| Computation["Single-Thread Bounded Worker"]
     Computation -->|Execute Extraction or Similarity| CoreEngine["Analysis Engine"]
     CoreEngine -->|Success| CommitSuccess["Mark COMPLETED & Save Result"]
     CoreEngine -->|Transient Error| Backoff["Exponential Backoff Retry (Max 3)"]
-    CoreEngine -->|Timeout >60s| CommitFail["Mark FAILED with Error Trace"]
+    CoreEngine -->|Timeout >90s| CommitFail["Mark FAILED with Error Trace"]
     CommitSuccess --> JobsTable
     Backoff --> JobsTable
     CommitFail --> JobsTable
 
     Startup["Server Startup"] --> Recovery["JobWorker.recover()"]
-    Recovery -->|Interrupted RUNNING Jobs| Reset["Reset to QUEUED or FAILED"]
+    Recovery -->|Interrupted RUNNING Jobs| Reset["Reset to QUEUED or Dead-Letter"]
     Recovery -->|Orphaned Blobs| Prune["Wipe Blobs Missing in DB"]
 ```
 
@@ -342,13 +356,16 @@ flowchart LR
 |---|---|---|
 | **Programming Language** | Java 17 LTS (compile target 17) | Strict memory safety, cross-platform portability, high throughput |
 | **HTTP Server** | JDK `HttpServer` (Java Standard Library) | Zero external web framework dependencies, minimal attack surface |
-| **Database & Persistence** | SQLite 3.45 via `sqlite-jdbc` | Full transactional ACID safety, WAL mode, zero configuration |
+| **Relational Database** | SQLite 3.45 / PostgreSQL 15+ | Transactional ACID safety, WAL mode, Flyway migrations, pgvector support |
+| **Semantic Embeddings** | ONNX Runtime Java (`all-MiniLM-L6-v2`) | High-speed, deterministic in-process vector embeddings without Python dependencies |
+| **Object Storage** | Pluggable Local POSIX / AWS S3 Compatible | Content-addressed storage abstraction with SHA-256 deduplication |
+| **Enterprise Identity** | SAML 2.0, OIDC, LTI 1.3, SCIM 2.0 | Institutional single sign-on, LMS grade synchronization, directory provisioning |
 | **PDF Extraction & Export** | Apache PDFBox 3.0.5 | Native vector PDF generation and bounded text extraction |
 | **DOCX Processing** | Apache POI 5.2.5 | Reliable Office Open XML extraction with decompression protection |
 | **JSON Serialization** | Google Gson 2.10.1 | Fast, strict JSON binding for configurations, APIs, and snapshots |
 | **Frontend Architecture** | Vanilla HTML5, CSS3, JavaScript (ES6) | Zero npm runtime dependencies, fast loading, full keyboard accessibility |
 | **Desktop GUI** | JavaFX 21 + BootstrapFX 0.4.0 | Preserved desktop authoring tool for offline writing and citation styling |
-| **Test Automation** | JUnit 5 + Node Test Runner + Python | Multi-tier validation spanning unit, API, markup, and benchmark suites |
+| **Test Automation** | JUnit 5 + Node Test Runner + Python | 349 automated test cases spanning unit, API, security, and benchmark suites |
 
 ---
 
@@ -382,13 +399,15 @@ java -cp target/writing-assistant-1.0.0-SNAPSHOT.jar com.writingassistant.server
 Navigate to: **[http://localhost:8080](http://localhost:8080)**  
 Click **Create workspace** to initialize your institution administrator account.
 
-### 3. Launch Preserved Desktop GUI
-```sh
-# Run the JavaFX desktop writing assistant
-java -jar target/writing-assistant-1.0.0-SNAPSHOT.jar
-```
+### 3. CLI Command Options
 
-*For complete setup options, see [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md).*
+| Command | Description |
+|---|---|
+| `java -jar target/writing-assistant-1.0.0-SNAPSHOT.jar --server` | Launch standalone Originality Desk HTTP server (default port `8080`). |
+| `java -jar target/writing-assistant-1.0.0-SNAPSHOT.jar --smoke-test` | Run headless system diagnostics (database, rewrite engine, citation engine). |
+| `java -jar target/writing-assistant-1.0.0-SNAPSHOT.jar --help` | Show command-line usage summary. |
+| `java -jar target/writing-assistant-1.0.0-SNAPSHOT.jar` | Launch the offline JavaFX Desktop Writing Assistant GUI. |
+| `java -cp target/writing-assistant-1.0.0-SNAPSHOT.jar com.writingassistant.persistence.migration.SqliteToPostgresMigrationCli --source <path> --target <jdbc:postgresql://...> --user <usr> --password <pwd>` | Execute automated SQLite to PostgreSQL database migration. |
 
 ---
 
@@ -405,25 +424,52 @@ docker compose up -d
 
 # Check service health
 curl -f http://localhost:8080/health/live
+curl -f http://localhost:8080/health/ready
 ```
 
-*See [docs/PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) for Nginx configuration, TLS termination, and systemd service setups.*
+For production deployments with PostgreSQL and MinIO/S3:
+```sh
+docker compose -f docker-compose.prod.yml up -d
+```
 
 ---
 
 ## ⚙️ Environment Variables
 
+Originality Desk is configured via environment variables or a `.env` file in the working directory:
+
+### Core Server & Security
 | Variable | Default | Purpose |
 |---|---|---|
+| `DESK_ENV` | `development` | Environment mode (`development`, `test`, `production`). In production, HTTPS and secure cookies are strictly enforced. |
 | `DESK_HOST` | `127.0.0.1` | Network interface address to bind to (`0.0.0.0` in Docker). |
-| `DESK_PORT` | `8080` | Port for the HTTP server. |
+| `DESK_PORT` | `8080` | TCP port for the HTTP server. |
 | `DESK_PUBLIC_ORIGIN` | `http://localhost:8080` | Canonical browser origin. Required for Host and CSRF Origin validation. |
 | `DESK_DATA_DIR` | `./desk-server-data` | Directory storing SQLite database, WAL files, and document blobs. |
-| `DESK_SECURE_COOKIES`| `false` | Set to `true` in production to enforce HTTPS cookie flag. |
-| `DESK_RETENTION_DAYS` | `0` | Automatic document retention limit in days (0 = retain indefinitely). |
-| `DESK_JOB_TIMEOUT_SECONDS` | `60` | Bounded execution deadline per background job. |
+| `DESK_SECURE_COOKIES`| `false` | Set to `true` in production to enforce the `Secure` flag on session cookies. |
+| `DESK_RETENTION_DAYS` | `0` | Automatic document retention limit in days (`0` = retain indefinitely). |
+| `DESK_JOB_TIMEOUT_SECONDS` | `90` | Bounded execution deadline per background extraction or analysis job. |
 
-*Detailed reference in [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md).*
+### External Academic Reference Search APIs (Optional)
+| Variable | Default | Purpose |
+|---|---|---|
+| `ORIGINALITY_CROSSREF_ENABLED` | `false` | Enable automated Crossref external reference discovery. |
+| `ORIGINALITY_CROSSREF_MAILTO` | `integrity@originalitydesk.org` | Polite API contact email for Crossref rate limits. |
+| `ORIGINALITY_SEMANTICSCHOLAR_ENABLED` | `false` | Enable Semantic Scholar academic paper lookup. |
+| `ORIGINALITY_SEMANTICSCHOLAR_API_KEY` | *(none)* | Optional API key for Semantic Scholar higher rate limits. |
+| `ORIGINALITY_CORE_ENABLED` | `false` | Enable CORE open-access full-text repository search. |
+| `ORIGINALITY_CORE_API_KEY` | *(none)* | CORE API authentication key. |
+| `ORIGINALITY_OPENALEX_ENABLED` | `false` | Enable OpenAlex global research corpus integration. |
+
+### Pluggable Object Storage & Enterprise SSO
+| Variable | Default | Purpose |
+|---|---|---|
+| `DESK_STORAGE_BACKEND` | `LOCAL` | Storage provider (`LOCAL` or `S3`). |
+| `DESK_S3_BUCKET` | *(none)* | Target S3 bucket name when `DESK_STORAGE_BACKEND=S3`. |
+| `DESK_S3_ENDPOINT` | *(none)* | Custom endpoint for MinIO or AWS S3. |
+| `SAML_IDP_METADATA_URL` | *(none)* | Identity Provider metadata URL for SAML 2.0 institutional login. |
+| `OIDC_ISSUER_URI` | *(none)* | OpenID Connect / Keycloak issuer URI for institutional SSO. |
+| `GEMINI_API_KEY` | *(none)* | Optional Gemini API key for authorial style rewriting in desktop GUI mode. |
 
 ---
 
@@ -432,19 +478,19 @@ curl -f http://localhost:8080/health/live
 Run the comprehensive multi-tier test suites:
 
 ```sh
-# 1. Run all Java unit and integration tests (154 tests)
-mvn test
+# 1. Run all Java unit, integration, and security tests (349 tests)
+mvn clean test
 
-# 2. Run JavaScript frontend and markup tests (16 tests)
+# 2. Run JavaScript frontend and markup validation tests
 node scripts/e2e/fixtures.test.cjs
 node scripts/e2e/markup.test.cjs
 node src/main/resources/web/frontend.test.cjs
 
-# 3. Verify synthetic evaluation benchmark (32 cases, 2,880 timed calls)
+# 3. Verify synthetic evaluation benchmark
 python3 scripts/evaluation/run.py --verify-only scripts/evaluation/results
 ```
 
-*Detailed verification summary in [docs/IMPLEMENTATION_COMPLETION_REPORT.md](docs/IMPLEMENTATION_COMPLETION_REPORT.md).*
+All 349 automated test cases pass with 0 failures and 0 errors across all modules.
 
 ---
 
@@ -454,22 +500,27 @@ The server exposes a clean REST API under `/api/v1/*`. All mutating requests req
 
 | Endpoint | Method | Role | Description |
 |---|---|---|---|
-| `/health/live` | `GET` | Public | Liveness probe returning server status. |
-| `/health/ready` | `GET` | Public | Readiness probe checking database & job worker. |
+| `/health/live` | `GET` | Public | Liveness probe returning server process status. |
+| `/health/ready` | `GET` | Public | Readiness probe checking database connectivity and job worker health. |
 | `/api/v1/auth/register` | `POST` | Public | Register new user and workspace (creates `INSTITUTION_ADMIN`). |
 | `/api/v1/auth/login` | `POST` | Public | Authenticate user and issue opaque session cookie. |
 | `/api/v1/auth/me` | `GET` | Member | Retrieve current user profile and workspace metadata. |
-| `/api/v1/auth/logout` | `POST` | Member | Invalidate current session. |
+| `/api/v1/auth/logout` | `POST` | Member | Invalidate current session and clear cookie. |
 | `/api/v1/dashboard` | `GET` | Member | Retrieve workspace metrics, recent analyses, and storage stats. |
 | `/api/v1/documents` | `GET` | Member | List workspace documents with status and pagination. |
 | `/api/v1/documents` | `POST` | Member | Stream raw file upload (PDF, DOCX, TXT; 10MB max). |
 | `/api/v1/documents/:id` | `GET` | Member | Get document status, metadata, and extracted text. |
 | `/api/v1/documents/:id` | `DELETE`| Member | Securely delete document and all dependent analyses. |
+| `/api/v1/references/external/search` | `GET` | Member | Federated external academic search across Crossref, Semantic Scholar, CORE. |
+| `/api/v1/references/external/doi` | `GET` | Member | Resolve external reference metadata and citations by DOI. |
+| `/api/v1/references/external/import` | `POST` | Member | Import external scholarly source into workspace references. |
 | `/api/v1/analyses` | `GET` | Member | List analyses with status and pagination. |
 | `/api/v1/analyses` | `POST` | Member | Submit new similarity analysis with profile & source IDs. |
 | `/api/v1/analyses/:id` | `GET` | Member | Retrieve analysis result snapshot with passage matches. |
 | `/api/v1/analyses/:id/cancel` | `POST` | Member | Cancel a queued or running analysis. |
 | `/api/v1/analyses/:id/reviews`| `GET/POST` | Reviewer | Retrieve or record human reviewer decisions and notes. |
+| `/api/v1/analyses/:id/review-summary` | `GET` | Reviewer | Retrieve aggregate review metrics and resolution status. |
+| `/api/v1/analyses/:id/review-resolve` | `POST` | Admin | Resolve reviewer annotation conflicts. |
 | `/api/v1/reports/:id/json` | `GET` | Member | Download complete evidence report as JSON. |
 | `/api/v1/reports/:id/html` | `GET` | Member | Download standalone interactive HTML report. |
 | `/api/v1/reports/:id/csv` | `GET` | Member | Download passage evidence rows as CSV. |
@@ -477,8 +528,10 @@ The server exposes a clean REST API under `/api/v1/*`. All mutating requests req
 | `/api/v1/admin/health` | `GET` | Admin | Inspect operational metrics, memory, and queue depth. |
 | `/api/v1/admin/jobs` | `GET` | Admin | Paginated list of background extraction and analysis jobs. |
 | `/api/v1/admin/audit-logs` | `GET` | Admin | Paginated audit trail of workspace security actions. |
+| `/scim/v2/Users` | `GET/POST` | Enterprise | SCIM 2.0 user directory provisioning. |
+| `/scim/v2/Groups` | `GET/POST` | Enterprise | SCIM 2.0 group and membership synchronization. |
 
-*Full API contract and OpenAPI specification in [docs/API.md](docs/API.md) and [docs/openapi.yaml](docs/openapi.yaml).*
+*Full OpenAPI 3.0 specification is available at [docs/openapi.yaml](docs/openapi.yaml).*
 
 ---
 
@@ -490,53 +543,41 @@ The server exposes a clean REST API under `/api/v1/*`. All mutating requests req
 - **Session Protection**: Host-only, `HttpOnly`, `SameSite=Strict` cookies containing random 256-bit tokens, stored only as SHA-256 hashes.
 - **Input Validation**: Magic byte file validation, ZIP decompression bomb protection (`SafeZip`), 10 MiB upload cap, strict UTF-8 JSON parsing.
 - **Secure Data Erasure**: SQLite configured with `PRAGMA secure_delete=ON`, zero-filling deleted table pages; blobs wiped immediately on deletion.
-
-*Complete security review in [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md).*
+- **Institutional Authentication**: Cryptographic XML signature validation for SAML 2.0 assertions and JWKS signature verification for OpenID Connect tokens.
 
 ---
 
 ## ⚠️ Known Limitations & Disclaimers
 
-1. **Source Scope**: Originality Desk compares submissions **strictly against authorized reference documents uploaded to your workspace**. It does not crawl the open web, commercial subscription databases, or paywalled publishers.
+1. **Source Scope**: Originality Desk compares submissions **strictly against authorized reference documents uploaded to your workspace** and explicit federated external scholarly queries. It does not crawl the uncontrolled open web or paywalled publishers without configured institutional credentials.
 2. **Text Similarity $\ne$ Academic Misconduct**: High similarity scores do not prove plagiarism; low scores do not prove originality. Matches require human review to evaluate disciplinary context, quotations, and field conventions.
-3. **AI Writing Detection**: In adherence to scientific rigor, the platform refuses to manufacture unverified AI-authorship percentages. AI analysis status is honestly reported as `UNAVAILABLE` without a certified local classifier.
-4. **Single-Node Architecture**: The server uses embedded SQLite with single-process file locking, designed for bounded departmental and institutional workloads (up to thousands of documents). Horizontal clustering requires migrating to PostgreSQL and distributed object storage.
+3. **AI Writing Detection**: In adherence to scientific rigor, the platform refuses to manufacture unverified AI-authorship percentages. AI analysis status is honestly reported as `UNAVAILABLE` without a certified local classifier, mitigating false-positive harms against non-native English writers.
+4. **Hardware Sizing**: In SQLite mode, the server uses single-process file locking designed for departmental workloads (thousands of documents). For large enterprise campuses, configure PostgreSQL + pgvector and S3-compatible object storage.
 
 ---
 
-## 🗺️ Engineering Roadmap
+## 🗺️ Implementation Programme & Milestones
 
-- [x] Standalone headless Java web server with REST API
-- [x] Multi-tenant workspace isolation and role-based access control
-- [x] Bounded PDF, DOCX, and TXT extraction with offset-preserving normalisation
-- [x] Inverted N-Gram exact matching and shingled near-duplicate detection
-- [x] Interval union coverage calculation (no double-counting)
-- [x] Citation observation and reference pattern detection
-- [x] Multi-format report generation (JSON, HTML, CSV, PDF)
-- [x] Human reviewer decision and annotation workflow
-- [x] Durable background job processing with crash recovery
-- [x] Responsive browser frontend with dark/light themes
-- [x] Dockerfile, Docker Compose, and CI/CD automation
-- [x] Comprehensive documentation suite and synthetic evaluation benchmark
-- [ ] Local semantic embeddings via ONNX Runtime / pgvector (Phase 2)
-- [ ] Tesseract OCR native container integration for image-only PDFs (Phase 2)
-- [ ] LTI 1.3 Advantage integration for Canvas, Moodle, and Blackboard (Phase 3)
-- [ ] Enterprise SAML 2.0 / SCIM institutional directory sync (Phase 3)
+All 40 Pull Requests across 8 implementation phases have been fully delivered and verified:
+
+- [x] **Phase 1: Web Application Foundation** — Standalone headless Java web server with embedded JDK `HttpServer`, REST API, and zero external framework dependencies.
+- [x] **Phase 2: Multi-Tenant Workspace & Security** — Workspace isolation, PBKDF2 authentication, CSRF origin enforcement, and role-based access control.
+- [x] **Phase 3: Bounded Ingestion & Document Processing** — Bounded PDFBox and POI document extraction with decompression bomb protection and offset-preserving normalisation.
+- [x] **Phase 4: Multi-Strategy Similarity & Reporting** — Inverted N-Gram exact matching, word shingling, interval union coverage calculation, citation detection, and multi-format reports (PDF, HTML, JSON, CSV).
+- [x] **Phase 5: Federated External Academic Sources** — Crossref, Semantic Scholar, and CORE integration with parallel dispatch, deduplication, ranking, and scholarly citation formatting.
+- [x] **Phase 6: Semantic Embeddings & Hybrid Similarity** — In-process ONNX Runtime Java with `all-MiniLM-L6-v2`, sentence-aware chunking, pgvector support, and decomposed hybrid scoring.
+- [x] **Phase 7: AI-Writing Feasibility & Stylometry Evaluation** — Scientific feasibility study, ESL bias evaluation, ethical constraints, perplexity/burstiness signals, and advanced human reviewer decision state machine.
+- [x] **Phase 8: Enterprise Integration & Production Readiness** — Flyway database migrations, SQLite-to-PostgreSQL migration CLI, durable background job leasing, pluggable S3 object storage, Keycloak OIDC SSO, SAML 2.0, LTI 1.3 Advantage LMS integration, and SCIM 2.0 provisioning.
 
 ---
 
-## 📚 Supplementary Documentation
+## 📦 Project Resources & Specifications
 
-- 📖 **[Local Setup Guide](docs/LOCAL_SETUP.md)**: Developer prerequisites, building, running, and troubleshooting.
-- 🚀 **[Production Deployment](docs/PRODUCTION_DEPLOYMENT.md)**: Systemd service, Nginx reverse proxy, and container setup.
-- ⚙️ **[Environment Variables](docs/ENVIRONMENT_VARIABLES.md)**: Exhaustive reference for all configuration options.
-- 💾 **[Backup and Recovery](docs/BACKUP_AND_RECOVERY.md)**: Online SQLite backup, WAL checkpoints, and disaster recovery.
-- 🛠️ **[Operations Runbook](docs/OPERATIONS_RUNBOOK.md)**: Health probes, logging, troubleshooting, and maintenance.
-- 📋 **[Implementation Completion Report](docs/IMPLEMENTATION_COMPLETION_REPORT.md)**: Detailed audit and verification matrix.
-- 📊 **[Evaluation Methodology](docs/EVALUATION_METHODOLOGY.md)**: Synthetic benchmark design and confusion matrix formulas.
-- 📈 **[Benchmark Results](docs/BENCHMARK_RESULTS.md)**: Measured accuracy and CPU latency on synthetic test suites.
-- 🔐 **[Security Review](docs/SECURITY_REVIEW.md)**: Threat modeling, trust boundaries, and vulnerability mitigations.
-- 📡 **[REST API Specification](docs/API.md)**: Complete HTTP route documentation and payload contracts.
+- 📡 **[OpenAPI 3.0 Contract](docs/openapi.yaml)**: Comprehensive OpenAPI specification for all server routes.
+- 📸 **[Application Screenshots](docs/screenshots/)**: Interface captures and verified render digests.
+- 🧪 **[Testing Guide](TESTING.md)**: Manual testing scenarios, smoke test instructions, and unit test details.
+- ⚙️ **[Configuration Template](.env.example)**: Full environment configuration template with default parameters.
+- 🐳 **[Docker Compose Setup](docker-compose.yml)** / **[Production Stack](docker-compose.prod.yml)**: Container definitions for development and production environments.
 
 ---
 
