@@ -84,7 +84,7 @@ public class CompositeSimilarityEngine {
         List<String> distinctLimitations = limitations.stream().distinct().toList();
 
         // Calculate total coverage as union (bounded by exact + near + semantic, max 1.0)
-        double totalCoverage = Math.min(1.0, exactCoverage + nearCoverage + semanticCoverage);
+        double totalCoverage = Math.max(exactCoverage, Math.min(1.0, exactCoverage + nearCoverage + semanticCoverage));
 
         return new CompositeSimilarityResult(
                 exactCoverage,
